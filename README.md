@@ -6,8 +6,10 @@ tracks a users list of media they would like to consume, and what they have alre
 PostgreSQL server set up
 
 ## SETUP
-`mv config_template.ini config.ini`
+1. `mv config_template.ini config.ini`
 and change the default settings to the correct settings for you setup
 
-`mv alembic_template.ini alembic.ini`
+2. `mv alembic_template.ini alembic.ini`
 and change the `sqlalchemy.url` to the correct values
+
+3. once alembic is configured run `alembic upgrade head` to setup database
