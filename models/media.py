@@ -1,4 +1,4 @@
-from gogomedia import db
+from database import db
 
 
 class Media(db.Model):
@@ -6,6 +6,10 @@ class Media(db.Model):
     id = db.Column('id', db.Integer, primary_key=True),
     medianame = db.Column('medianame', db.String(80), nullable=False),
     user = db.Column('user', db.Integer, db.ForeignKey('users.id'), nullable=False)
+
+    def __init__(self, medianame, userid):
+        self.medianame = medianame
+        self.user = userid
 
     def __repr__(self):
         return '<Media(id={}, medianame={}, user={})>'.format(self.id, self.medianame, self.user)
