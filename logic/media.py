@@ -36,6 +36,16 @@ def update_media(userid, medianame, consumed=False):
     db.session.commit()
 
 
+def remove_media(username, medianame):
+    """
+    remove_media removes a Media record from the database
+    """
+    userid = User.query.filter_by(username=username).first().id
+    # if there is no record for this medianame for this user, then filter returns nothing, and nothing is deleted
+    Media.query.filter((Media.medianame == medianame) & (Media.user == userid)).delete()
+    db.session.commit()
+
+
 def get_media(username, consumed=None):
     """
     get_media returns all the media associated with the given username. If consumed is True or False,

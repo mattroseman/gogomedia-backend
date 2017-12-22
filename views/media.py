@@ -1,6 +1,6 @@
 from flask import request, jsonify
 
-from logic.media import get_media, upsert_media
+from logic.media import get_media, upsert_media, remove_media
 
 
 def media(username):
@@ -21,6 +21,11 @@ def media(username):
             return get_media(username)
     else:
         medianame = request.form['medianame']
+
+        # if the remove parameter is in the request and set to True, remove this media item
+        if 'remove' in request.form and request.form['remove']:
+            remove_media(username, medianame)
+            return jsonify(success=True)
 
         consumed = False
         # check if the consumed parameter was sent
