@@ -12,3 +12,11 @@ def add_media(username, medianame):
     userid = User.query.filter_by(username=username).first().id
     db.session.add(Media(medianame, userid))
     db.session.commit()
+
+
+def get_media(username):
+    """
+    get_media returns all the media associated with the given username
+    """
+    return ',\n'.join(list(map(lambda media: str(media.medianame),
+                               User.query.filter_by(username=username).first().media)))
