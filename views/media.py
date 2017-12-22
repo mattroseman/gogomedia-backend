@@ -1,7 +1,6 @@
 from flask import request, jsonify
 
-from logic.media import add_media, get_media, update_media
-from models.media import Media
+from logic.media import get_media, upsert_media
 
 
 def media(username):
@@ -14,12 +13,11 @@ def media(username):
     else:
         medianame = request.form['medianame']
         consumed = False
+
+        # check if the consumed parameter was sent
         if 'consumed' in request.form:
             consumed = request.form['consumed']
 
-        if Media.query.filter_by(medianame=medianame).first():
-            update_media(username, medianame, consumed)
-        else:
-            add_media(username, medianame, consumed)
+        upsert_media(username, medianame, consumed)
 
         return jsonify(success=True)
