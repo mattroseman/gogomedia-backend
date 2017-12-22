@@ -36,9 +36,15 @@ def update_media(userid, medianame, consumed=False):
     db.session.commit()
 
 
-def get_media(username):
+def get_media(username, consumed=None):
     """
-    get_media returns all the media associated with the given username
+    get_media returns all the media associated with the given username. If consumed is True or False,
+    then only the media with the same consumed state will be returned
     """
-    return ',\n'.join(list(map(lambda media: str(media.medianame),
-                               User.query.filter_by(username=username).first().media)))
+    if consumed is None:
+        return ', '.join(list(map(lambda media: str(media.medianame),
+                                  User.query.filter_by(username=username).first().media)))
+    else:
+        return ', '.join(list(map(lambda media: str(media.medianame),
+                                  filter(lambda media: media.consumed == consumed,
+                                         User.query.filter_by(username=username).first().media))))
