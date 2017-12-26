@@ -11,14 +11,14 @@ def media(username):
     if request.method == 'GET':
         if 'consumed' in request.args:
             if request.args.get('consumed') in ['True', 'true', 'T', 't', 'Yes', 'yes', 'Y', 'y']:
-                return get_media(username, True)
+                return jsonify(get_media(username, True))
             elif request.args.get('consumed') in ['False', 'false', 'F', 'f', 'No', 'no', 'N', 'n']:
-                return get_media(username, False)
+                return jsonify(get_media(username, False))
             else:
                 # TODO return malformed parameters response
                 pass
         else:
-            return get_media(username)
+            return jsonify(get_media(username))
     else:
         medianame = request.form['medianame']
 

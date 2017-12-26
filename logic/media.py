@@ -51,10 +51,16 @@ def get_media(username, consumed=None):
     get_media returns all the media associated with the given username. If consumed is True or False,
     then only the media with the same consumed state will be returned
     """
-    if consumed is None:
-        return ', '.join(list(map(lambda media: str(media.medianame),
-                                  User.query.filter_by(username=username).first().media)))
-    else:
-        return ', '.join(list(map(lambda media: str(media.medianame),
-                                  filter(lambda media: media.consumed == consumed,
-                                         User.query.filter_by(username=username).first().media))))
+    media_list = User.query.filter_by(username=username).first().media
+
+    # if consumed is set then only return the media items that have the same consumed value
+    if consumed is not None:
+        media_list = filter(lambda media: media.consumed == consumed, media_list)
+
+    # modify the key's for each media item
+    media_list = list(map(lambda media: {
+        'name': media.medianame,
+        'user': username
+    }, media_list))
+
+    return media_list
