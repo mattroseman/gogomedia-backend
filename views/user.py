@@ -7,7 +7,8 @@ def user():
     """
     user just accepts POST request containing a field with new user information
     """
-    username = request.form['username']
+    body = request.get_json()
+    username = body['username']
     add_user(username)
 
     return jsonify(success=True)

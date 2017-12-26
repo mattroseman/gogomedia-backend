@@ -8,6 +8,7 @@ def media(username):
     media accepts a POST request containing a medianame to add to the user specified by username
     media accepts a GET request and returns all the media associated with the user specified by username
     """
+    body = request.get_json()
     if request.method == 'GET':
         if 'consumed' in request.args:
             if request.args.get('consumed') in ['True', 'true', 'T', 't', 'Yes', 'yes', 'Y', 'y']:
@@ -20,17 +21,18 @@ def media(username):
         else:
             return jsonify(get_media(username))
     else:
-        medianame = request.form['medianame']
+        medianame = body['name']
+        print(medianame)
 
         # if the remove parameter is in the request and set to True, remove this media item
-        if 'remove' in request.form and request.form['remove']:
+        if 'remove' in body and body['remove']:
             remove_media(username, medianame)
             return jsonify(success=True)
 
         consumed = False
         # check if the consumed parameter was sent
-        if 'consumed' in request.form:
-            consumed = request.form['consumed']
+        if 'consumed' in body:
+            consumed = body['consumed']
 
         upsert_media(username, medianame, consumed)
 
