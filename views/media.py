@@ -26,14 +26,14 @@ def media(username):
     if request.method == 'GET':
         if 'consumed' in request.args:
             if request.args.get('consumed') in ['True', 'true', 'T', 't', 'Yes', 'yes', 'Y', 'y']:
-                return jsonify(get_media(username, consumed=True))
+                return jsonify(list(get_media(username, consumed=True)))
             elif request.args.get('consumed') in ['False', 'false', 'F', 'f', 'No', 'no', 'N', 'n']:
-                return jsonify(get_media(username, consumed=False))
+                return jsonify(list(get_media(username, consumed=False)))
             else:
                 # TODO return malformed parameters response
                 pass
         else:
-            return jsonify(get_media(username))
+            return jsonify(list(get_media(username)))
     elif request.method == 'PUT':
         if 'name' not in body:
             # TODO return malformed parameters response if 'name' isn't present
