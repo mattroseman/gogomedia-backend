@@ -3,9 +3,9 @@ from database import db
 
 class Media(db.Model):
     __tablename__ = 'media'
-    medianame = db.Column(db.String(80), primary_key=True)
-    user = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
-    consumed = db.Column(db.Boolean, default=False)
+    medianame = db.Column('medianame', db.String(80), primary_key=True)
+    user = db.Column('user', db.Integer, db.ForeignKey('users.id'), primary_key=True)
+    consumed = db.Column('consumed', db.Boolean, default=False)
 
     def __init__(self, medianame, userid, consumed=False):
         self.medianame = medianame
