@@ -8,7 +8,9 @@ from models.user import User
 from models.media import Media
 
 from logic.user import add_user
+from logic.media import upsert_media
 from logic.media import add_media
+from logic.media import update_media
 from logic.media import remove_media
 from logic.media import get_media
 
@@ -129,6 +131,54 @@ class GoGoMediaLogicTestCase(GoGoMediaTestCase):
         self.assertIsNotNone(media)
         self.assertEqual(media.medianame, 'testmedianame')
         self.assertFalse(media.consumed)
+
+    def test_update_media(self):
+        user = User('testname')
+        db.session.add(user)
+        db.session.commit()
+
+        media = Media('testmedianame', user.id)
+        db.session.add(media)
+        db.session.commit()
+
+        self.assertFalse(media.consumed)
+
+        update_media(user.id, media.medianame, True)
+
+        self.assertTrue(media.consumed)
+
+        update_media(user.id, media.medianame, False)
+
+        self.assertFalse(media.consumed)
+
+    def test_upsert_media_with_new_element(self):
+        user = User('testname')
+        db.session.add(user)
+        db.session.commit()
+
+        upsert_media('testname', 'testmedianame')
+
+        media = Media.query.filter((Media.medianame == 'testmedianame') & (Media.user == user.id)).first()
+
+        self.assertIsNotNone(media)
+        self.assertEqual(media.medianame, 'testmedianame')
+
+    def test_upsert_media_with_existing_element(self):
+        user = User('testname')
+        db.session.add(user)
+        db.session.commit()
+
+        media = Media('testmedianame', user.id)
+        db.session.add(media)
+        db.session.commit()
+
+        upsert_media('testname', 'testmedianame', True)
+
+        self.assertTrue(media.consumed)
+
+        media_list = Media.query.filter(Media.user == user.id).all()
+
+        self.assertEqual(media_list, [media])
 
     def test_remove_media(self):
         user = User('testname')
