@@ -27,7 +27,7 @@ def add_media(userid, medianame, consumed=False):
     db.session.commit()
 
 
-def update_media(userid, medianame, consumed=False):
+def update_media(userid, medianame, consumed):
     """
     upadte_media updates an existing media record with he given medianame with the given values
     """
@@ -60,10 +60,3 @@ def get_media(username, consumed=None):
 
     # modify the key's for each media item
     return set(map(lambda media: media.medianame, media_list))
-
-    # media_list = list(map(lambda media: {
-    #     'name': media.medianame,
-    #     'user': username
-    # }, media_list))
-
-    # return media_list

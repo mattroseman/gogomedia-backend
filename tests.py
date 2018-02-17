@@ -9,6 +9,8 @@ from models.media import Media
 
 from logic.user import add_user
 from logic.media import add_media
+from logic.media import remove_media
+from logic.media import get_media
 
 
 class GoGoMediaTestCase(TestCase):
@@ -103,6 +105,140 @@ class GoGoMediaModelTestCase(GoGoMediaTestCase):
         db.session.commit()
 
         self.assertFalse(media in db.session)
+
+
+class GoGoMediaLogicTestCase(GoGoMediaTestCase):
+
+    def test_add_user(self):
+        add_user('testname')
+
+        user = User.query.filter(User.username == 'testname').first()
+
+        self.assertIsNotNone(user)
+        self.assertEqual(user.username, 'testname')
+
+    def test_add_media(self):
+        user = User('testname')
+        db.session.add(user)
+        db.session.commit()
+
+        add_media(user.id, 'testmedianame')
+
+        media = Media.query.filter((Media.medianame == 'testmedianame') & (Media.user == user.id)).first()
+
+        self.assertIsNotNone(media)
+        self.assertEqual(media.medianame, 'testmedianame')
+        self.assertFalse(media.consumed)
+
+    def test_remove_media(self):
+        user = User('testname')
+        db.session.add(user)
+        db.session.commit()
+
+        media = Media('testmedianame', user.id)
+        db.session.add(media)
+        db.session.commit()
+
+        self.assertTrue(media in db.session)
+
+        remove_media('testname', 'testmedianame')
+
+        self.assertFalse(media in db.session)
+
+    def test_get_media(self):
+        user = User('testname')
+        db.session.add(user)
+        db.session.commit()
+
+        media = Media('testmedianame', user.id)
+        db.session.add(media)
+        db.session.commit()
+
+        media_list = get_media('testname')
+
+        self.assertEqual(media_list, {'testmedianame'})
+
+    def test_get_media_multiple_elements(self):
+        user = User('testname')
+        db.session.add(user)
+        db.session.commit()
+
+        media1 = Media('testmedianame1', user.id)
+        media2 = Media('testmedianame2', user.id)
+        db.session.add(media1)
+        db.session.add(media2)
+        db.session.commit()
+
+        media_list = get_media('testname')
+
+        self.assertEqual(media_list, {'testmedianame1', 'testmedianame2'})
+
+    def test_get_media_multiple_users(self):
+        """
+        'testname1': ['testmedianame1', 'testmedianame2', 'testmedianame3']
+        'testname2': ['testmedianame4', 'testmedianame1']
+        """
+        user1 = User('testname1')
+        user2 = User('testname2')
+        db.session.add(user1)
+        db.session.add(user2)
+        db.session.commit()
+
+        media1 = Media('testmedianame1', user1.id)
+        media2 = Media('testmedianame2', user1.id)
+        media3 = Media('testmedianame3', user1.id)
+        media4 = Media('testmedianame4', user2.id)
+        media5 = Media('testmedianame1', user2.id)
+        db.session.add(media1)
+        db.session.add(media2)
+        db.session.add(media3)
+        db.session.add(media4)
+        db.session.add(media5)
+        db.session.commit()
+
+        user1_media_list = get_media('testname1')
+
+        self.assertEqual(user1_media_list, {'testmedianame1', 'testmedianame2', 'testmedianame3'})
+
+        user2_media_list = get_media('testname2')
+
+        self.assertEqual(user2_media_list, {'testmedianame4', 'testmedianame1'})
+
+    def test_get_meida_consumed_and_unconsumed(self):
+        user = User('testname')
+        db.session.add(user)
+        db.session.commit()
+
+        media1 = Media('testmedianame1', user.id, consumed=True)
+        media2 = Media('testmedianame2', user.id, consumed=True)
+        media3 = Media('testmedianame3', user.id, consumed=False)
+        media4 = Media('testmedianame4', user.id, consumed=False)
+        media5 = Media('testmedianame5', user.id, consumed=True)
+        db.session.add(media1)
+        db.session.add(media2)
+        db.session.add(media3)
+        db.session.add(media4)
+        db.session.add(media5)
+        db.session.commit()
+
+        consumed_media_list = get_media('testname', consumed=True)
+        unconsumed_media_list = get_media('testname', consumed=False)
+
+        self.assertEqual(consumed_media_list, {'testmedianame1', 'testmedianame2', 'testmedianame5'})
+        self.assertEqual(unconsumed_media_list, {'testmedianame3', 'testmedianame4'})
+
+    def test_get_media_empty_set(self):
+        user = User('testname')
+        db.session.add(user)
+        db.session.commit()
+
+        empty_media_list = get_media('testname')
+        empty_consumed_media_list = get_media('testname', consumed=True)
+        empty_unconsumed_media_list = get_media('testname', consumed=False)
+
+        self.assertEqual(empty_media_list, set())
+        self.assertEqual(empty_consumed_media_list, set())
+        self.assertEqual(empty_unconsumed_media_list, set())
 
 
 class GoGoMediaViewTestCase(GoGoMediaTestCase):
