@@ -55,7 +55,7 @@ def get_media(username, consumed=None):
     """
     get_media returns all the media associated with the given username. If consumed is True or False,
     then only the media with the same consumed state will be returned
-    @return: a set of strings indicating media names belonging to the given username
+    @return: a list of dicts, each representing a media item
     """
     media_list = User.query.filter_by(username=username).first().media
 
@@ -64,4 +64,4 @@ def get_media(username, consumed=None):
         media_list = filter(lambda media: media.consumed == consumed, media_list)
 
     # modify the key's for each media item
-    return set(map(lambda media: media.medianame, media_list))
+    return list(map(lambda media: {'name': media.medianame, 'consumed': media.consumed}, media_list))

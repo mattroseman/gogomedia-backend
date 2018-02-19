@@ -205,9 +205,9 @@ class GoGoMediaLogicTestCase(GoGoMediaTestCase):
         db.session.add(media)
         db.session.commit()
 
-        media_list = get_media('testname')
+        media_list = sorted(get_media('testname'), key=lambda media: media['name'])
 
-        self.assertEqual(media_list, {'testmedianame'})
+        self.assertEqual(media_list, [{'name': 'testmedianame', 'consumed': False}])
 
     def test_get_media_multiple_elements(self):
         user = User('testname')
@@ -220,9 +220,10 @@ class GoGoMediaLogicTestCase(GoGoMediaTestCase):
         db.session.add(media2)
         db.session.commit()
 
-        media_list = get_media('testname')
+        media_list = sorted(get_media('testname'), key=lambda media: media['name'])
 
-        self.assertEqual(media_list, {'testmedianame1', 'testmedianame2'})
+        self.assertEqual(media_list, [{'name': 'testmedianame1', 'consumed': False},
+                                      {'name': 'testmedianame2', 'consumed': False}])
 
     def test_get_media_multiple_users(self):
         """
@@ -247,13 +248,16 @@ class GoGoMediaLogicTestCase(GoGoMediaTestCase):
         db.session.add(media5)
         db.session.commit()
 
-        user1_media_list = get_media('testname1')
+        user1_media_list = sorted(get_media('testname1'), key=lambda media: media['name'])
 
-        self.assertEqual(user1_media_list, {'testmedianame1', 'testmedianame2', 'testmedianame3'})
+        self.assertEqual(user1_media_list, [{'name': 'testmedianame1', 'consumed': False},
+                                            {'name': 'testmedianame2', 'consumed': False},
+                                            {'name': 'testmedianame3', 'consumed': False}])
 
-        user2_media_list = get_media('testname2')
+        user2_media_list = sorted(get_media('testname2'), key=lambda media: media['name'])
 
-        self.assertEqual(user2_media_list, {'testmedianame4', 'testmedianame1'})
+        self.assertEqual(user2_media_list, [{'name': 'testmedianame1', 'consumed': False},
+                                            {'name': 'testmedianame4', 'consumed': False}])
 
     def test_get_meida_consumed_and_unconsumed(self):
         user = User('testname')
@@ -272,13 +276,16 @@ class GoGoMediaLogicTestCase(GoGoMediaTestCase):
         db.session.add(media5)
         db.session.commit()
 
-        consumed_media_list = get_media('testname', consumed=True)
-        unconsumed_media_list = get_media('testname', consumed=False)
+        consumed_media_list = sorted(get_media('testname', consumed=True), key=lambda media: media['name'])
+        unconsumed_media_list = sorted(get_media('testname', consumed=False), key=lambda media: media['name'])
 
-        self.assertEqual(consumed_media_list, {'testmedianame1', 'testmedianame2', 'testmedianame5'})
-        self.assertEqual(unconsumed_media_list, {'testmedianame3', 'testmedianame4'})
+        self.assertEqual(consumed_media_list, [{'name': 'testmedianame1', 'consumed': True},
+                                               {'name': 'testmedianame2', 'consumed': True},
+                                               {'name': 'testmedianame5', 'consumed': True}])
+        self.assertEqual(unconsumed_media_list, [{'name': 'testmedianame3', 'consumed': False},
+                                                 {'name': 'testmedianame4', 'consumed': False}])
 
-    def test_get_media_empty_set(self):
+    def test_get_media_empty_list(self):
         user = User('testname')
         db.session.add(user)
         db.session.commit()
@@ -287,9 +294,9 @@ class GoGoMediaLogicTestCase(GoGoMediaTestCase):
         empty_consumed_media_list = get_media('testname', consumed=True)
         empty_unconsumed_media_list = get_media('testname', consumed=False)
 
-        self.assertEqual(empty_media_list, set())
-        self.assertEqual(empty_consumed_media_list, set())
-        self.assertEqual(empty_unconsumed_media_list, set())
+        self.assertEqual(empty_media_list, [])
+        self.assertEqual(empty_consumed_media_list, [])
+        self.assertEqual(empty_unconsumed_media_list, [])
 
 
 class GoGoMediaViewTestCase(GoGoMediaTestCase):
@@ -419,7 +426,9 @@ class GoGoMediaViewTestCase(GoGoMediaTestCase):
         response = self.client.get('/user/testname/media')
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(set(json.loads(response.get_data(as_text=True))), {'testmedianame1', 'testmedianame2'})
+        self.assertEqual(sorted(json.loads(response.get_data(as_text=True)), key=lambda media: media['name']),
+                         [{'name': 'testmedianame1', 'consumed': False},
+                          {'name': 'testmedianame2', 'consumed': False}])
 
     def test_get_consumed_media(self):
         user = User('testname')
@@ -441,8 +450,10 @@ class GoGoMediaViewTestCase(GoGoMediaTestCase):
         response = self.client.get('/user/testname/media?consumed=yes')
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(set(json.loads(response.get_data(as_text=True))),
-                         {'testmedianame1', 'testmedianame2', 'testmedianame5'})
+        self.assertEqual(sorted(json.loads(response.get_data(as_text=True)), key=lambda media: media['name']),
+                         [{'name': 'testmedianame1', 'consumed': True},
+                          {'name': 'testmedianame2', 'consumed': True},
+                          {'name': 'testmedianame5', 'consumed': True}])
 
     def test_get_unconsumed_media(self):
         user = User('testname')
@@ -464,8 +475,9 @@ class GoGoMediaViewTestCase(GoGoMediaTestCase):
         response = self.client.get('/user/testname/media?consumed=no')
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(set(json.loads(response.get_data(as_text=True))),
-                         {'testmedianame3', 'testmedianame4'})
+        self.assertEqual(sorted(json.loads(response.get_data(as_text=True)), key=lambda media: media['name']),
+                         [{'name': 'testmedianame3', 'consumed': False},
+                          {'name': 'testmedianame4', 'consumed': False}])
 
     def test_delete_media(self):
         user = User('testname')
