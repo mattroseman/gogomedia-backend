@@ -13,9 +13,9 @@ def upsert_media(username, medianame, consumed=False):
 
     # check if this media has been added for this user already
     if Media.query.filter((Media.medianame == medianame) & (Media.user == userid)).first():
-        update_media(userid, medianame, consumed)
+        return update_media(userid, medianame, consumed)
     else:
-        add_media(userid, medianame, consumed)
+        return add_media(userid, medianame, consumed)
 
 
 def add_media(userid, medianame, consumed=False):
@@ -23,8 +23,11 @@ def add_media(userid, medianame, consumed=False):
     add_media creates a new media record with the given medianame and assigns the media to the user with the given
     username
     """
-    db.session.add(Media(medianame, userid, consumed))
+    media = Media(medianame, userid, consumed)
+    db.session.add(media)
     db.session.commit()
+
+    return media
 
 
 def update_media(userid, medianame, consumed):
@@ -34,6 +37,8 @@ def update_media(userid, medianame, consumed):
     media = Media.query.filter((Media.medianame == medianame) & (Media.user == userid)).first()
     media.consumed = consumed
     db.session.commit()
+
+    return media
 
 
 def remove_media(username, medianame):

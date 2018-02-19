@@ -46,12 +46,12 @@ def media(username):
 
         upsert_media(username, medianame, consumed)
 
-        return jsonify(success=True)
-    else:
+        return jsonify({'name': medianame, 'consumed': consumed})
+    else:  # request.method == 'DELETE'
         if 'name' not in body:
             # TODO return malformed parameters response if 'name' isn't present
             pass
         medianame = body['name']
 
-        remove_media(username, medianame)
-        return jsonify(success=True)
+        media = remove_media(username, medianame)
+        return jsonify({'success': True})

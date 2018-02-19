@@ -323,7 +323,7 @@ class GoGoMediaViewTestCase(GoGoMediaTestCase):
                                    content_type='application/json')
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(json.loads(response.get_data(as_text=True)), {'success': True})
+        self.assertEqual(json.loads(response.get_data(as_text=True)), {'name': 'testmedianame', 'consumed': False})
 
         media = Media.query.filter((Media.user == user.id) & (Media.medianame == 'testmedianame')).first()
 
@@ -342,7 +342,7 @@ class GoGoMediaViewTestCase(GoGoMediaTestCase):
                                    content_type='application/json')
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(json.loads(response.get_data(as_text=True)), {'success': True})
+        self.assertEqual(json.loads(response.get_data(as_text=True)), {'name': 'testmedianame', 'consumed': True})
 
         media = Media.query.filter((Media.user == user.id) & (Media.medianame == 'testmedianame')).first()
 
@@ -361,7 +361,7 @@ class GoGoMediaViewTestCase(GoGoMediaTestCase):
                                    content_type='application/json')
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(json.loads(response.get_data(as_text=True)), {'success': True})
+        self.assertEqual(json.loads(response.get_data(as_text=True)), {'name': 'testmedianame', 'consumed': False})
 
         media = Media.query.filter((Media.user == user.id) & (Media.medianame == 'testmedianame')).first()
 
@@ -384,7 +384,7 @@ class GoGoMediaViewTestCase(GoGoMediaTestCase):
                                    content_type='application/json')
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(json.loads(response.get_data(as_text=True)), {'success': True})
+        self.assertEqual(json.loads(response.get_data(as_text=True)), {'name': 'testmedianame', 'consumed': True})
 
         media_list = Media.query.filter((Media.user == user.id) & (Media.medianame == 'testmedianame')).all()
 
@@ -397,7 +397,7 @@ class GoGoMediaViewTestCase(GoGoMediaTestCase):
                                    content_type='application/json')
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(json.loads(response.get_data(as_text=True)), {'success': True})
+        self.assertEqual(json.loads(response.get_data(as_text=True)), {'name': 'testmedianame', 'consumed': False})
 
         media_list = Media.query.filter((Media.user == user.id) & (Media.medianame == 'testmedianame')).all()
 
@@ -486,6 +486,18 @@ class GoGoMediaViewTestCase(GoGoMediaTestCase):
         media_list = Media.query.filter(Media.user == user.id).all()
 
         self.assertEqual(media_list, [])
+
+    def test_delete_unexisting_media(self):
+        user = User('testname')
+        db.session.add(user)
+        db.session.commit()
+
+        response = self.client.delete('/user/testname/media',
+                                      data=json.dumps({'name': 'testmedianame'}),
+                                      content_type='application/json')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(json.loads(response.get_data(as_text=True)), {'success': True})
 
 
 if __name__ == '__main__':
