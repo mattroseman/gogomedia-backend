@@ -35,9 +35,21 @@ run `python tests.py` to run the tests
     
     ```
     {
-    	'name': 'username'
+    	'username': 'JohnSmith'
+      'password': 'pass123'
     }
     ```
+
+- **/login [POST]** logs in a user
+
+  Request Body:
+
+  ```
+  {
+    'username': 'JohnSmith'
+    'password': 'pass123'
+  }
+  ```
                                                                                                              
 - **/user/\<username>/media [PUT]** add/update a media element for this user
 

@@ -1,16 +1,16 @@
 from flask import Flask
 from flask_cors import CORS
-from flask_login import LoginManager
 from database import db
+from login_manager import login_manager
 
 from routes import add_routes
-
-login_manager = LoginManager()
 
 
 def create_app(database_uri):
     app = Flask(__name__)
     CORS(app)
+
+    app.secret_key = 'super secret key'
 
     app.config['SQLALCHEMY_DATABASE_URI'] = database_uri
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False

@@ -10,3 +10,10 @@ def add_user(username, password):
     """
     db.session.add(User(username, password))
     db.session.commit()
+
+
+def get_user(username):
+    """
+    get_user queries the database for a user with the given username, returning the user instance
+    """
+    return User.query.filter_by(username=username).first()

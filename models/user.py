@@ -7,18 +7,28 @@ class User(db.Model):
     id = db.Column('id', db.Integer, primary_key=True)
     username = db.Column('username', db.String(50), unique=True, nullable=False)
     passhash = db.Column('passhash', db.String(60))
-    passsalt = db.Column('passsalt', db.String(29))
+    authenticated = db.Column('authenticated', db.Boolean, default=False)
     media = db.relationship('Media', backref='users', lazy=True)
 
     def __init__(self, username, password):
         self.username = username
         password = password.encode('utf-8')
-        salt = bcrypt.gensalt()
-        self.passhash = bcrypt.hashpw(password, salt).decode('utf-8')
-        self.passsalt = salt.decode('utf-8')
+        self.passhash = bcrypt.hashpw(password, bcrypt.gensalt()).decode('utf-8')
 
     def __repr__(self):
         return '<User(id={}, username={})>'.format(self.id, self.username)
 
     def get_id(self):
-        return self.id
+        return str(self.id).encode('utf-8').decode('utf-8')
+
+    def is_authenticated(self):
+        return self.authenticated
+
+    def is_active():
+        # Currently there is no mechanism for "deactivating" accounts
+        # if there was the code would be here
+        return True
+
+    def is_anonymous():
+        # Currently there is no mechanism for "anonymous" users
+        return False
