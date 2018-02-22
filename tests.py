@@ -19,7 +19,8 @@ from logic.media import get_media
 class GoGoMediaTestCase(TestCase):
 
     def create_app(self):
-        return create_app(config['alembic']['sqlalchemy.test.url'])
+        # return create_app(config['alembic']['sqlalchemy.test.url'])
+        return create_app('postgresql://matthew:P@ssw0rd@localhost/gogomedia-test')
 
     def setUp(self):
         db.create_all()
@@ -32,7 +33,7 @@ class GoGoMediaTestCase(TestCase):
 class GoGoMediaModelTestCase(GoGoMediaTestCase):
 
     def test_add_user(self):
-        user = User('testname')
+        user = User('testname', 'P@ssw0rd')
         db.session.add(user)
         db.session.commit()
 
@@ -41,7 +42,7 @@ class GoGoMediaModelTestCase(GoGoMediaTestCase):
         self.assertEqual(user.username, 'testname')
 
     def test_remove_user(self):
-        user = User('testname')
+        user = User('testname', 'P@ssw0rd')
         db.session.add(user)
         db.session.commit()
 
@@ -53,7 +54,7 @@ class GoGoMediaModelTestCase(GoGoMediaTestCase):
         self.assertFalse(user in db.session)
 
     def test_add_media(self):
-        user = User('testname')
+        user = User('testname', 'P@ssw0rd')
         db.session.add(user)
         db.session.commit()
 
@@ -67,7 +68,7 @@ class GoGoMediaModelTestCase(GoGoMediaTestCase):
         self.assertTrue(media in db.session)
 
     def test_add_consumed_media(self):
-        user = User('testname')
+        user = User('testname', 'P@ssw0rd')
         db.session.add(user)
         db.session.commit()
 
@@ -78,7 +79,7 @@ class GoGoMediaModelTestCase(GoGoMediaTestCase):
         self.assertTrue(media.consumed)
 
     def test_update_media(self):
-        user = User('testname')
+        user = User('testname', 'P@ssw0rd')
         db.session.add(user)
         db.session.commit()
 
@@ -94,7 +95,7 @@ class GoGoMediaModelTestCase(GoGoMediaTestCase):
         self.assertTrue(media.consumed)
 
     def test_remove_media(self):
-        user = User('testname')
+        user = User('testname', 'P@ssw0rd')
         db.session.add(user)
         db.session.commit()
 
@@ -113,7 +114,7 @@ class GoGoMediaModelTestCase(GoGoMediaTestCase):
 class GoGoMediaLogicTestCase(GoGoMediaTestCase):
 
     def test_add_user(self):
-        add_user('testname')
+        add_user('testname', 'P@ssw0rd')
 
         user = User.query.filter(User.username == 'testname').first()
 
@@ -121,7 +122,7 @@ class GoGoMediaLogicTestCase(GoGoMediaTestCase):
         self.assertEqual(user.username, 'testname')
 
     def test_add_media(self):
-        user = User('testname')
+        user = User('testname', 'P@ssw0rd')
         db.session.add(user)
         db.session.commit()
 
@@ -134,7 +135,7 @@ class GoGoMediaLogicTestCase(GoGoMediaTestCase):
         self.assertFalse(media.consumed)
 
     def test_update_media(self):
-        user = User('testname')
+        user = User('testname', 'P@ssw0rd')
         db.session.add(user)
         db.session.commit()
 
@@ -153,7 +154,7 @@ class GoGoMediaLogicTestCase(GoGoMediaTestCase):
         self.assertFalse(media.consumed)
 
     def test_upsert_media_with_new_element(self):
-        user = User('testname')
+        user = User('testname', 'P@ssw0rd')
         db.session.add(user)
         db.session.commit()
 
@@ -165,7 +166,7 @@ class GoGoMediaLogicTestCase(GoGoMediaTestCase):
         self.assertEqual(media.medianame, 'testmedianame')
 
     def test_upsert_media_with_existing_element(self):
-        user = User('testname')
+        user = User('testname', 'P@ssw0rd')
         db.session.add(user)
         db.session.commit()
 
@@ -182,7 +183,7 @@ class GoGoMediaLogicTestCase(GoGoMediaTestCase):
         self.assertEqual(media_list, [media])
 
     def test_remove_media(self):
-        user = User('testname')
+        user = User('testname', 'P@ssw0rd')
         db.session.add(user)
         db.session.commit()
 
@@ -197,7 +198,7 @@ class GoGoMediaLogicTestCase(GoGoMediaTestCase):
         self.assertFalse(media in db.session)
 
     def test_get_media(self):
-        user = User('testname')
+        user = User('testname', 'P@ssw0rd')
         db.session.add(user)
         db.session.commit()
 
@@ -210,7 +211,7 @@ class GoGoMediaLogicTestCase(GoGoMediaTestCase):
         self.assertEqual(media_list, [{'name': 'testmedianame', 'consumed': False}])
 
     def test_get_media_multiple_elements(self):
-        user = User('testname')
+        user = User('testname', 'P@ssw0rd')
         db.session.add(user)
         db.session.commit()
 
@@ -230,8 +231,8 @@ class GoGoMediaLogicTestCase(GoGoMediaTestCase):
         'testname1': ['testmedianame1', 'testmedianame2', 'testmedianame3']
         'testname2': ['testmedianame4', 'testmedianame1']
         """
-        user1 = User('testname1')
-        user2 = User('testname2')
+        user1 = User('testname1', 'P@ssw0rd')
+        user2 = User('testname2', 'P@ssw0rd')
         db.session.add(user1)
         db.session.add(user2)
         db.session.commit()
@@ -260,7 +261,7 @@ class GoGoMediaLogicTestCase(GoGoMediaTestCase):
                                             {'name': 'testmedianame4', 'consumed': False}])
 
     def test_get_meida_consumed_and_unconsumed(self):
-        user = User('testname')
+        user = User('testname', 'P@ssw0rd')
         db.session.add(user)
         db.session.commit()
 
@@ -286,7 +287,7 @@ class GoGoMediaLogicTestCase(GoGoMediaTestCase):
                                                  {'name': 'testmedianame4', 'consumed': False}])
 
     def test_get_media_empty_list(self):
-        user = User('testname')
+        user = User('testname', 'P@ssw0rd')
         db.session.add(user)
         db.session.commit()
 
@@ -309,7 +310,7 @@ class GoGoMediaViewTestCase(GoGoMediaTestCase):
 
     def test_user(self):
         response = self.client.post('/user',
-                                    data=json.dumps({'username': 'testname'}),
+                                    data=json.dumps({'username': 'testname', 'password': 'P@ssw0rd'}),
                                     content_type='application/json')
 
         self.assertEqual(response.status_code, 200)
@@ -321,7 +322,7 @@ class GoGoMediaViewTestCase(GoGoMediaTestCase):
         self.assertEqual(user.username, 'testname')
 
     def test_add_media(self):
-        user = User('testname')
+        user = User('testname', 'P@ssw0rd')
         db.session.add(user)
         db.session.commit()
 
@@ -340,7 +341,7 @@ class GoGoMediaViewTestCase(GoGoMediaTestCase):
         self.assertFalse(media.consumed)
 
     def test_add_media_consumed(self):
-        user = User('testname')
+        user = User('testname', 'P@ssw0rd')
         db.session.add(user)
         db.session.commit()
 
@@ -359,7 +360,7 @@ class GoGoMediaViewTestCase(GoGoMediaTestCase):
         self.assertTrue(media.consumed)
 
     def test_add_media_unconsumed(self):
-        user = User('testname')
+        user = User('testname', 'P@ssw0rd')
         db.session.add(user)
         db.session.commit()
 
@@ -378,7 +379,7 @@ class GoGoMediaViewTestCase(GoGoMediaTestCase):
         self.assertFalse(media.consumed)
 
     def test_update_media(self):
-        user = User('testname')
+        user = User('testname', 'P@ssw0rd')
         db.session.add(user)
         db.session.commit()
 
@@ -413,7 +414,7 @@ class GoGoMediaViewTestCase(GoGoMediaTestCase):
         self.assertFalse(media_list[0].consumed)
 
     def test_get_media(self):
-        user = User('testname')
+        user = User('testname', 'P@ssw0rd')
         db.session.add(user)
         db.session.commit()
 
@@ -431,7 +432,7 @@ class GoGoMediaViewTestCase(GoGoMediaTestCase):
                           {'name': 'testmedianame2', 'consumed': False}])
 
     def test_get_consumed_media(self):
-        user = User('testname')
+        user = User('testname', 'P@ssw0rd')
         db.session.add(user)
         db.session.commit()
 
@@ -456,7 +457,7 @@ class GoGoMediaViewTestCase(GoGoMediaTestCase):
                           {'name': 'testmedianame5', 'consumed': True}])
 
     def test_get_unconsumed_media(self):
-        user = User('testname')
+        user = User('testname', 'P@ssw0rd')
         db.session.add(user)
         db.session.commit()
 
@@ -480,7 +481,7 @@ class GoGoMediaViewTestCase(GoGoMediaTestCase):
                           {'name': 'testmedianame4', 'consumed': False}])
 
     def test_delete_media(self):
-        user = User('testname')
+        user = User('testname', 'P@ssw0rd')
         db.session.add(user)
         db.session.commit()
 
@@ -500,7 +501,7 @@ class GoGoMediaViewTestCase(GoGoMediaTestCase):
         self.assertEqual(media_list, [])
 
     def test_delete_unexisting_media(self):
-        user = User('testname')
+        user = User('testname', 'P@ssw0rd')
         db.session.add(user)
         db.session.commit()
 
@@ -513,9 +514,9 @@ class GoGoMediaViewTestCase(GoGoMediaTestCase):
 
 
 if __name__ == '__main__':
-    import configparser
+    # import configparser
 
-    config = configparser.ConfigParser()
-    config.read('alembic.ini')
+    # config = configparser.ConfigParser()
+    # config.read('alembic.ini')
 
     unittest.main()

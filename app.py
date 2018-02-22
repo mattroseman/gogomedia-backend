@@ -1,8 +1,11 @@
 from flask import Flask
 from flask_cors import CORS
+from flask_login import LoginManager
 from database import db
 
 from routes import add_routes
+
+login_manager = LoginManager()
 
 
 def create_app(database_uri):
@@ -17,6 +20,8 @@ def create_app(database_uri):
     db.init_app(app)
     db.create_all(app=app)
 
+    login_manager.init_app(app)
+
     return app
 
 
@@ -25,6 +30,7 @@ if __name__ == '__main__':
 
     config = configparser.ConfigParser()
     config.read('alembic.ini')
+
     app = create_app(config['alembic']['sqlalchemy.url'])
 
     app.run()

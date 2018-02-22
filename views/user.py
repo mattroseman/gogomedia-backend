@@ -9,6 +9,7 @@ def user():
     """
     body = request.get_json()
     username = body['username']
-    add_user(username)
+    password = body['password']
+    add_user(username, password)
 
     return jsonify(success=True)
