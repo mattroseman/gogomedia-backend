@@ -24,11 +24,18 @@ class User(db.Model):
     def is_authenticated(self):
         return self.authenticated
 
-    def is_active():
+    def is_active(self):
         # Currently there is no mechanism for "deactivating" accounts
         # if there was the code would be here
         return True
 
-    def is_anonymous():
+    def is_anonymous(self):
         # Currently there is no mechanism for "anonymous" users
         return False
+
+    def authenticate_password(self, password):
+        """
+        authenticate_password takes an unhashed password, and returns True if this mathces the
+        hashed password + salt for this user
+        """
+        return bcrypt.checkpw(password.encode('utf-8'), self.passhash.encode('utf-8'))

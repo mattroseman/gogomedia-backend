@@ -1,10 +1,8 @@
 from flask import request, jsonify
 from flask_login import login_user
-import bcrypt
 from database import db
 
-from logic.user import add_user
-from logic.user import get_user
+from logic.user import add_user, get_user
 
 
 def user():
@@ -30,7 +28,7 @@ def login():
     user = get_user(username)
 
     if user:
-        if bcrypt.checkpw(password.encode('utf-8'), user.passhash.encode('utf-8')):
+        if user.authenticate_password(password):
             user.authenticated = True
             db.session.commit()
             login_user(user, remember=True)
