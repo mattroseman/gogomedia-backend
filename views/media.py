@@ -1,8 +1,11 @@
 from flask import request, jsonify
+from flask_login import login_required, current_user
 
 from logic.media import get_media, upsert_media, remove_media
+from logic.user import get_user
 
 
+@login_required
 def media(username):
     """
     media accepts a PUT request with formdata that matches
@@ -22,6 +25,14 @@ def media(username):
         }
     """
     body = request.get_json()
+    user = get_user(username)
+    if user is None:
+        # TODO there is no user with this name, return incorrect parameters response
+        return jsonify({'success': False})
+
+    if current_user != user:
+        # TODO you can't get media for a user you are not logged in as
+        return jsonify({'success': False})
 
     if request.method == 'GET':
         if 'consumed' in request.args:
