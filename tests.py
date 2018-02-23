@@ -8,12 +8,8 @@ from database import db
 from models.user import User
 from models.media import Media
 
-from logic.user import add_user
-from logic.media import upsert_media
-from logic.media import add_media
-from logic.media import update_media
-from logic.media import remove_media
-from logic.media import get_media
+from logic.user import add_user, get_user
+from logic.media import upsert_media, add_media, update_media, remove_media, get_media
 
 
 class GoGoMediaTestCase(TestCase):
@@ -52,6 +48,47 @@ class GoGoMediaModelTestCase(GoGoMediaTestCase):
         db.session.commit()
 
         self.assertFalse(user in db.session)
+
+    def test_user_get_id(self):
+        user = User('testname', 'P@ssw0rd')
+        db.session.add(user)
+        db.session.commit()
+
+        self.assertEqual(user.get_id(), '1')
+
+    def test_user_is_authenticated(self):
+        user = User('testname', 'P@ssw0rd')
+        db.session.add(user)
+        db.session.commit()
+
+        self.assertFalse(user.is_authenticated())
+
+        user.authenticated = True
+        db.session.commit()
+
+        self.assertTrue(user.is_authenticated())
+
+    def test_user_is_active(self):
+        user = User('testname', 'P@ssw0rd')
+        db.session.add(user)
+        db.session.commit()
+
+        self.assertTrue(user.is_active())
+
+    def test_user_is_anonymous(self):
+        user = User('testname', 'P@ssw0rd')
+        db.session.add(user)
+        db.session.commit()
+
+        self.assertFalse(user.is_anonymous())
+
+    def test_user_authenticate_password(self):
+        user = User('testname', 'P@ssw0rd')
+        db.session.add(user)
+        db.session.commit()
+
+        self.assertFalse(user.authenticate_password('pass123'))
+        self.assertTrue(user.authenticate_password('P@ssw0rd'))
 
     def test_add_media(self):
         user = User('testname', 'P@ssw0rd')
@@ -120,6 +157,13 @@ class GoGoMediaLogicTestCase(GoGoMediaTestCase):
 
         self.assertIsNotNone(user)
         self.assertEqual(user.username, 'testname')
+
+    def test_get_user(self):
+        user = User('testname', 'P@ssw0rd')
+        db.session.add(user)
+        db.session.commit()
+
+        self.assertEqual(user, get_user('testname'))
 
     def test_add_media(self):
         user = User('testname', 'P@ssw0rd')
@@ -320,6 +364,38 @@ class GoGoMediaViewTestCase(GoGoMediaTestCase):
 
         self.assertIsNotNone(user)
         self.assertEqual(user.username, 'testname')
+
+    def test_login(self):
+        user = User('testname', 'P@ssw0rd')
+        db.session.add(user)
+        db.session.commit()
+
+        self.assertFalse(user.authenticated)
+
+        with self.client:
+            response = self.client.post('/login',
+                                        data=json.dumps({'username': 'testname', 'password': 'P@ssw0rd'}),
+                                        content_type='application/json')
+
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(json.loads(response.get_data(as_text=True)), {'success': True})
+            self.assertTrue(user.authenticated)
+
+    def test_logout(self):
+        user = User('testname', 'P@ssw0rd')
+        db.session.add(user)
+        db.session.commit()
+
+        with self.client:
+            self.client.post('/login',
+                             data=json.dumps({'username': 'testname', 'password': 'P@ssw0rd'}),
+                             content_type='application/json')
+
+            response = self.client.get('/logout')
+
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(json.loads(response.get_data(as_text=True)), {'success': True})
+            self.assertFalse(user.authenticated)
 
     def test_add_media(self):
         user = User('testname', 'P@ssw0rd')
