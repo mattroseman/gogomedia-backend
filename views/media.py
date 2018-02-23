@@ -1,4 +1,4 @@
-from flask import request, jsonify
+from flask import request, jsonify, current_app
 from flask_login import login_required, current_user
 
 from logic.media import get_media, upsert_media, remove_media
@@ -30,7 +30,7 @@ def media(username):
         # TODO there is no user with this name, return incorrect parameters response
         return jsonify({'success': False})
 
-    if current_user != user:
+    if current_user != user and not current_app.config['LOGIN_DISABLED']:
         # TODO you can't get media for a user you are not logged in as
         return jsonify({'success': False})
 

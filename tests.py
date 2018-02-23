@@ -1,6 +1,7 @@
 import unittest
-from flask_testing import TestCase
 import json
+from flask_testing import TestCase
+from flask import current_app
 
 from app import create_app
 from database import db
@@ -15,7 +16,6 @@ from logic.media import upsert_media, add_media, update_media, remove_media, get
 class GoGoMediaTestCase(TestCase):
 
     def create_app(self):
-        # return create_app(config['alembic']['sqlalchemy.test.url'])
         return create_app(test=True)
 
     def setUp(self):
@@ -381,6 +381,22 @@ class GoGoMediaViewTestCase(GoGoMediaTestCase):
             self.assertEqual(json.loads(response.get_data(as_text=True)), {'success': True})
             self.assertTrue(user.authenticated)
 
+    def test_invalid_login(self):
+        user = User('testname', 'P@ssw0rd')
+        db.session.add(user)
+        db.session.commit()
+
+        self.assertFalse(user.authenticated)
+
+        with self.client:
+            response = self.client.post('/login',
+                                        data=json.dumps({'username': 'testname', 'password': 'pass123'}),
+                                        content_type='application/json')
+
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(json.loads(response.get_data(as_text=True)), {'success': False})
+            self.assertFalse(user.authenticated)
+
     def test_logout(self):
         user = User('testname', 'P@ssw0rd')
         db.session.add(user)
@@ -415,6 +431,69 @@ class GoGoMediaViewTestCase(GoGoMediaTestCase):
         self.assertEqual(media.medianame, 'testmedianame')
         self.assertEqual(media.user, user.id)
         self.assertFalse(media.consumed)
+
+    def test_login_required_media_endpoint(self):
+        """
+        This test applies to all the media functions that use the /user/<username>/media endpoint
+        """
+        # temporarily enable login for this test
+        current_app.config['LOGIN_DISABLED'] = False
+
+        user = User('testname', 'P@ssw0rd')
+        db.session.add(user)
+        db.session.commit()
+
+        with self.client:
+            # havn't logged in yet
+            response = self.client.put('/user/testname/media',
+                                       data=json.dumps({'name': 'testmedianame'}),
+                                       content_type='application/json')
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(json.loads(response.get_data(as_text=True)), {'success': False})
+            self.assertEqual(user.media, [])
+
+            self.client.post('/login',
+                             data=json.dumps({'username': 'testname', 'password': 'P@ssw0rd'}),
+                             content_type='application/json')
+            self.assertTrue(user.authenticated)
+
+            # have logged in
+            response = self.client.put('/user/testname/media',
+                                       data=json.dumps({'name': 'testmedianame'}),
+                                       content_type='application/json')
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(json.loads(response.get_data(as_text=True)), {'name': 'testmedianame', 'consumed': False})
+            media_list = get_media('testname')
+            self.assertEqual(media_list, [{'name': 'testmedianame', 'consumed': False}])
+
+    def test_login_required_media_endpoint_different_user(self):
+        """
+        This test applies to all the media functions that use the /user/<username>/media endpoint
+        """
+        # temporarily enable login for this test
+        current_app.config['LOGIN_DISABLED'] = False
+
+        user1 = User('testname1', 'P@ssw0rd')
+        user2 = User('testname2', 'pass123')
+        db.session.add(user1)
+        db.session.add(user2)
+        db.session.commit()
+
+        with self.client:
+            self.client.post('/login',
+                             data=json.dumps({'username': 'testname1', 'password': 'P@ssw0rd'}),
+                             content_type='application/json')
+
+            self.assertTrue(user1.authenticated)
+
+            response = self.client.put('/user/testname2/media',
+                                       data=json.dumps({'name': 'testmedianame'}),
+                                       content_type='application/json')
+
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(json.loads(response.get_data(as_text=True)), {'success': False})
+            media_list = get_media('testname2')
+            self.assertEqual(media_list, [])
 
     def test_add_media_consumed(self):
         user = User('testname', 'P@ssw0rd')
