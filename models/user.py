@@ -16,10 +16,15 @@ class User(db.Model):
         self.passhash = bcrypt.hashpw(password, bcrypt.gensalt()).decode('utf-8')
 
     def __repr__(self):
-        return '<User(id={}, username={})>'.format(self.id, self.username)
+        return '<User(id={}, username={}, passhash={}, authenticated={})>'.format(
+            self.id, self.username, self.passhash, self.authenticated)
 
     def get_id(self):
-        return str(self.id).encode('utf-8').decode('utf-8')
+        """
+        get_id returns the unique id of this user as a unicode string
+        """
+        return str(self.id)
+        # return str(self.id).encode('utf-8').decode('utf-8')
 
     def is_authenticated(self):
         return self.authenticated
