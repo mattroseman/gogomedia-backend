@@ -22,6 +22,7 @@ def create_app(test=False):
     app.config['SQLALCHEMY_DATABASE_URI'] = database_uri
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['TESTING'] = test
+    app.config['LOGIN_DISABLED'] = test
     app.config['JSONIFY_PRETTYPRINT_REGULAR'] = False
 
     add_routes(app)
