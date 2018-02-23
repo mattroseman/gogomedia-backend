@@ -1,9 +1,8 @@
 from login_manager import login_manager
 
 from views.index import index
-from views.user import user
+from views.user import user, login, logout
 from views.media import media
-from views.user import login
 
 from models.user import User
 
@@ -14,6 +13,7 @@ def add_routes(app):
     app.add_url_rule('/user', 'user', user, methods=['POST'])
 
     app.add_url_rule('/login', 'login', login, methods=['POST'])
+    app.add_url_rule('/logout', 'logout', logout, methods=['GET'])
 
     app.add_url_rule('/user/<username>/media', 'media', media, methods=['PUT', 'GET', 'DELETE'])
 

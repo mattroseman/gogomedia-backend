@@ -2,18 +2,26 @@ from flask import Flask
 from flask_cors import CORS
 from database import db
 from login_manager import login_manager
+import configparser
 
 from routes import add_routes
 
 
-def create_app(database_uri):
+def create_app(test=False):
     app = Flask(__name__)
     CORS(app)
 
+    # TODO user urandom to generate this
     app.secret_key = 'super secret key'
+
+    config = configparser.ConfigParser()
+    config.read('config.ini')
+
+    database_uri = config['database']['sqlalchemy.test.url'] if test else config['database']['sqlalchemy.url']
 
     app.config['SQLALCHEMY_DATABASE_URI'] = database_uri
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config['TESTING'] = test
 
     add_routes(app)
 
@@ -26,11 +34,6 @@ def create_app(database_uri):
 
 
 if __name__ == '__main__':
-    import configparser
-
-    config = configparser.ConfigParser()
-    config.read('alembic.ini')
-
-    app = create_app(config['alembic']['sqlalchemy.url'])
+    app = create_app()
 
     app.run()

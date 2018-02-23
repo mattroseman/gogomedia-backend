@@ -1,5 +1,5 @@
 from flask import request, jsonify
-from flask_login import login_user
+from flask_login import login_user, logout_user
 from database import db
 
 from logic.user import add_user, get_user
@@ -34,3 +34,12 @@ def login():
             login_user(user, remember=True)
             return jsonify(success=True)
     return jsonify(success=False)
+
+
+def logout():
+    """
+    logout logs the current user out
+    """
+    logout_user()
+    # TODO mark user as unethenticated?
+    return jsonify(success=True)

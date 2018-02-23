@@ -20,7 +20,7 @@ class GoGoMediaTestCase(TestCase):
 
     def create_app(self):
         # return create_app(config['alembic']['sqlalchemy.test.url'])
-        return create_app('postgresql://matthew:P@ssw0rd@localhost/gogomedia-test')
+        return create_app(test=True)
 
     def setUp(self):
         db.create_all()
