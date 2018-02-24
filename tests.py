@@ -352,8 +352,8 @@ class GoGoMediaViewTestCase(GoGoMediaTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.get_data(as_text=True), 'Hello World')
 
-    def test_user(self):
-        response = self.client.post('/user',
+    def test_register(self):
+        response = self.client.post('/register',
                                     data=json.dumps({'username': 'testname', 'password': 'P@ssw0rd'}),
                                     content_type='application/json')
         body = json.loads(response.get_data(as_text=True))

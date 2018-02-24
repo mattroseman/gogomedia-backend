@@ -5,9 +5,9 @@ from database import db
 from logic.user import add_user, get_user
 
 
-def user():
+def register():
     """
-    user just accepts POST request containing a field with new user information
+    register accepts POST request containing a field with new user information
     """
     body = request.get_json()
     username = body['username']
