@@ -12,9 +12,15 @@ def user():
     body = request.get_json()
     username = body['username']
     password = body['password']
-    add_user(username, password)
+    user = add_user(username, password)
 
-    return jsonify(success=True)
+    auth_token = user.encode_auth_token()
+
+    return jsonify({
+        'success': True,
+        'message': 'User was successfully registered',
+        'auth_token': auth_token.decode()
+    }), 201
 
 
 def login():
@@ -32,8 +38,15 @@ def login():
             user.authenticated = True
             db.session.commit()
             login_user(user, remember=True)
-            return jsonify(success=True)
-    return jsonify(success=False)
+            return jsonify({
+                'success': True,
+                'message': 'User successfully logged in.'
+            })
+
+    return jsonify({
+        'success': False,
+        'message': 'User doesn\'t exist. Please register user.'
+    })
 
 
 def logout():
@@ -45,4 +58,7 @@ def logout():
     db.session.commit()
     logout_user()
 
-    return jsonify(success=True)
+    return jsonify({
+        'success': True,
+        'message': 'User successfully logged out.'
+    })
