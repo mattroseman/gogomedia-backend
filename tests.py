@@ -367,6 +367,39 @@ class GoGoMediaViewTestCase(GoGoMediaTestCase):
         self.assertIsNotNone(user)
         self.assertEqual(user.username, 'testname')
 
+    def test_register_missing_request_body_params(self):
+        response = self.client.post('/register',
+                                    data=json.dumps({'password': 'P@ssw0rd'}),
+                                    content_type='application/json')
+        body = json.loads(response.get_data(as_text=True))
+
+        self.assertEqual(response.status_code, 422)
+        self.assertFalse(body['success'])
+        self.assertEqual(body['message'], 'Request body is missing the parameter \'username\'')
+
+        response = self.client.post('/register',
+                                    data=json.dumps({'username': 'testname'}),
+                                    content_type='application/json')
+        body = json.loads(response.get_data(as_text=True))
+
+        self.assertEqual(response.status_code, 422)
+        self.assertFalse(body['success'])
+        self.assertEqual(body['message'], 'Request body is missing the parameter \'password\'')
+
+    def test_register_existing_user(self):
+        user = User('testname', 'P@ssw0rd')
+        db.session.add(user)
+        db.session.commit()
+
+        response = self.client.post('/register',
+                                    data=json.dumps({'username': 'testname', 'password': 'P@ssw0rd'}),
+                                    content_type='application/json')
+        body = json.loads(response.get_data(as_text=True))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(body['success'])
+        self.assertEqual(body['message'], 'This username is already taken. Please choose another.')
+
     def test_login(self):
         user = User('testname', 'P@ssw0rd')
         db.session.add(user)
@@ -384,6 +417,25 @@ class GoGoMediaViewTestCase(GoGoMediaTestCase):
             self.assertTrue(body['success'])
             self.assertTrue(user.authenticated)
 
+    def test_login_missing_request_body_params(self):
+        response = self.client.post('/login',
+                                    data=json.dumps({'password': 'P@ssw0rd'}),
+                                    content_type='application/json')
+        body = json.loads(response.get_data(as_text=True))
+
+        self.assertEqual(response.status_code, 422)
+        self.assertFalse(body['success'])
+        self.assertEqual(body['message'], 'Request body is missing the parameter \'username\'')
+
+        response = self.client.post('/login',
+                                    data=json.dumps({'username': 'testname'}),
+                                    content_type='application/json')
+        body = json.loads(response.get_data(as_text=True))
+
+        self.assertEqual(response.status_code, 422)
+        self.assertFalse(body['success'])
+        self.assertEqual(body['message'], 'Request body is missing the parameter \'password\'')
+
     def test_invalid_login(self):
         user = User('testname', 'P@ssw0rd')
         db.session.add(user)
@@ -400,6 +452,16 @@ class GoGoMediaViewTestCase(GoGoMediaTestCase):
             self.assertEqual(response.status_code, 200)
             self.assertFalse(body['success'])
             self.assertFalse(user.authenticated)
+
+    def test_login_with_unexisting_user(self):
+        response = self.client.post('/login',
+                                    data=json.dumps({'username': 'testname', 'password': 'P@ssw0rd'}),
+                                    content_type='application/json')
+        body = json.loads(response.get_data(as_text=True))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(body['success'])
+        self.assertEqual(body['message'], 'User doesn\'t exist. Please register user.')
 
     def test_logout(self):
         user = User('testname', 'P@ssw0rd')
@@ -439,6 +501,20 @@ class GoGoMediaViewTestCase(GoGoMediaTestCase):
         self.assertEqual(media.medianame, 'testmedianame')
         self.assertEqual(media.user, user.id)
         self.assertFalse(media.consumed)
+
+    def test_add_media_missing_request_body_params(self):
+        user = User('testname', 'P@ssw0rd')
+        db.session.add(user)
+        db.session.commit()
+
+        response = self.client.put('/user/testname/media',
+                                   data=json.dumps({}),
+                                   content_type='application/json')
+        body = json.loads(response.get_data(as_text=True))
+
+        self.assertEqual(response.status_code, 422)
+        self.assertFalse(body['success'])
+        self.assertEqual(body['message'], 'Request body is missing the parameter \'name\'.')
 
     def test_login_required_media_endpoint(self):
         """
@@ -706,6 +782,20 @@ class GoGoMediaViewTestCase(GoGoMediaTestCase):
         media_list = Media.query.filter(Media.user == user.id).all()
 
         self.assertEqual(media_list, [])
+
+    def test_delete_media_missing_request_body_params(self):
+        user = User('testname', 'P@ssw0rd')
+        db.session.add(user)
+        db.session.commit()
+
+        response = self.client.delete('/user/testname/media',
+                                      data=json.dumps({}),
+                                      content_type='application/json')
+        body = json.loads(response.get_data(as_text=True))
+
+        self.assertEqual(response.status_code, 422)
+        self.assertFalse(body['success'])
+        self.assertEqual(body['message'], 'Request body is missing the parameter \'name\'.')
 
     def test_delete_unexisting_media(self):
         user = User('testname', 'P@ssw0rd')

@@ -72,8 +72,9 @@ def media(username):
             # return malformed parameters response if 'name' isn't present
             return jsonify({
                 'success': False,
-                'message': 'Request body is missing a parameter \'name\'.'
-            })
+                'message': 'Request body is missing the parameter \'name\'.'
+            }), 422
+
         medianame = body['name']
 
         consumed = False
@@ -93,8 +94,9 @@ def media(username):
             # return malformed parameters response if 'name' isn't present
             return jsonify({
                 'success': False,
-                'message': 'Request body is missing a parameter \'name\'.'
-            })
+                'message': 'Request body is missing the parameter \'name\'.'
+            }), 422
+
         medianame = body['name']
 
         media = remove_media(username, medianame)

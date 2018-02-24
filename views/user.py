@@ -10,8 +10,28 @@ def register():
     register accepts POST request containing a field with new user information
     """
     body = request.get_json()
+
+    if 'username' not in body:
+        return jsonify({
+            'success': False,
+            'message': 'Request body is missing the parameter \'username\''
+        }), 422
+    if 'password' not in body:
+        return jsonify({
+            'success': False,
+            'message': 'Request body is missing the parameter \'password\''
+        }), 422
+
     username = body['username']
     password = body['password']
+
+    # If this user exists already
+    if get_user(username):
+        return jsonify({
+            'success': False,
+            'message': 'This username is already taken. Please choose another.'
+        })
+
     user = add_user(username, password)
 
     auth_token = user.encode_auth_token()
@@ -29,8 +49,21 @@ def login():
     and logs in the user
     """
     body = request.get_json()
+
+    if 'username' not in body:
+        return jsonify({
+            'success': False,
+            'message': 'Request body is missing the parameter \'username\''
+        }), 422
+    if 'password' not in body:
+        return jsonify({
+            'success': False,
+            'message': 'Request body is missing the parameter \'password\''
+        }), 422
+
     username = body['username']
     password = body['password']
+
     user = get_user(username)
 
     if user:
@@ -38,9 +71,13 @@ def login():
             user.authenticated = True
             db.session.commit()
             login_user(user, remember=True)
+
+            auth_token = user.encode_auth_token()
+
             return jsonify({
                 'success': True,
-                'message': 'User successfully logged in.'
+                'message': 'User successfully logged in.',
+                'auth_token': auth_token.decode()
             })
 
     return jsonify({
