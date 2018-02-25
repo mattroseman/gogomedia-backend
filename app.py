@@ -1,7 +1,6 @@
 from flask import Flask
 from flask_cors import CORS
 from database import db
-from login_manager import login_manager
 import configparser
 
 from routes import add_routes
@@ -29,8 +28,6 @@ def create_app(test=False):
 
     db.init_app(app)
     db.create_all(app=app)
-
-    login_manager.init_app(app)
 
     return app
 

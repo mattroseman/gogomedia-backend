@@ -22,3 +22,10 @@ def get_user(username):
     get_user queries the database for a user with the given username, returning the user instance
     """
     return User.query.filter_by(username=username).first()
+
+
+def get_user_by_id(user_id):
+    """
+    get_user_by_id queries the database for a user with the given user id, returning the user instance
+    """
+    return User.query.filter_by(id=user_id).first()

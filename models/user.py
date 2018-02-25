@@ -22,25 +22,6 @@ class User(db.Model):
         return '<User(id={}, username={}, passhash={}, authenticated={})>'.format(
             self.id, self.username, self.passhash, self.authenticated)
 
-    def get_id(self):
-        """
-        get_id returns the unique id of this user as a unicode string
-        """
-        return str(self.id)
-        # return str(self.id).encode('utf-8').decode('utf-8')
-
-    def is_authenticated(self):
-        return self.authenticated
-
-    def is_active(self):
-        # Currently there is no mechanism for "deactivating" accounts
-        # if there was the code would be here
-        return True
-
-    def is_anonymous(self):
-        # Currently there is no mechanism for "anonymous" users
-        return False
-
     def authenticate_password(self, password):
         """
         authenticate_password takes an unhashed password, and returns True if this mathces the
@@ -61,7 +42,7 @@ class User(db.Model):
         return jwt.encode(payload, current_app.config['SECRET_KEY'], algorithm='HS256')
 
     @staticmethod
-    def decode_auth_token(self, auth_token):
+    def decode_auth_token(auth_token):
         """
         decode_auth_token is a static method that takes some user's auth token, deocdes it, and returns the user's id
         @param auth_token: a string representing the encrypted auth token made for some user

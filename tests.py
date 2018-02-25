@@ -1,5 +1,7 @@
 import unittest
 import json
+import datetime
+import jwt
 from flask_testing import TestCase
 from flask import current_app
 
@@ -9,7 +11,7 @@ from database import db
 from models.user import User
 from models.media import Media
 
-from logic.user import add_user, get_user
+from logic.user import add_user, get_user, get_user_by_id
 from logic.media import upsert_media, add_media, update_media, remove_media, get_media
 
 
@@ -49,39 +51,6 @@ class GoGoMediaModelTestCase(GoGoMediaTestCase):
 
         self.assertFalse(user in db.session)
 
-    def test_user_get_id(self):
-        user = User('testname', 'P@ssw0rd')
-        db.session.add(user)
-        db.session.commit()
-
-        self.assertEqual(user.get_id(), '1')
-
-    def test_user_is_authenticated(self):
-        user = User('testname', 'P@ssw0rd')
-        db.session.add(user)
-        db.session.commit()
-
-        self.assertFalse(user.is_authenticated())
-
-        user.authenticated = True
-        db.session.commit()
-
-        self.assertTrue(user.is_authenticated())
-
-    def test_user_is_active(self):
-        user = User('testname', 'P@ssw0rd')
-        db.session.add(user)
-        db.session.commit()
-
-        self.assertTrue(user.is_active())
-
-    def test_user_is_anonymous(self):
-        user = User('testname', 'P@ssw0rd')
-        db.session.add(user)
-        db.session.commit()
-
-        self.assertFalse(user.is_anonymous())
-
     def test_user_authenticate_password(self):
         user = User('testname', 'P@ssw0rd')
         db.session.add(user)
@@ -89,6 +58,59 @@ class GoGoMediaModelTestCase(GoGoMediaTestCase):
 
         self.assertFalse(user.authenticate_password('pass123'))
         self.assertTrue(user.authenticate_password('P@ssw0rd'))
+
+    def test_user_encode_auth_token(self):
+        user = User('testname', 'P@ssw0rd')
+        db.session.add(user)
+        db.session.commit()
+
+        auth_token = user.encode_auth_token()
+
+        self.assertIsInstance(auth_token, bytes)
+
+    def test_user_decode_auth_token(self):
+        user = User('testname', 'P@ssw0rd')
+        db.session.add(user)
+        db.session.commit()
+
+        auth_token = user.encode_auth_token().decode()
+
+        user_id = User.decode_auth_token(auth_token)
+
+        self.assertIsInstance(user_id, int)
+        self.assertEqual(user_id, 1)
+
+    def test_user_decode_auth_token_invalid(self):
+        user = User('testname', 'P@ssw0rd')
+        db.session.add(user)
+        db.session.commit()
+
+        auth_token = user.encode_auth_token().decode()
+        # remove first character to make auth_token invalid
+        auth_token = auth_token[1:]
+
+        user_id = User.decode_auth_token(auth_token)
+
+        self.assertIsInstance(user_id, str)
+        self.assertEqual(user_id, 'Invalid token. Please log in again.')
+
+    def test_user_decode_auth_token_expired(self):
+        user = User('testname', 'P@ssw0rd')
+        db.session.add(user)
+        db.session.commit()
+
+        # manually create expired auth_token
+        payload = {
+            'exp': datetime.datetime.utcnow() - datetime.timedelta(days=1),
+            'iat': datetime.datetime.utcnow(),
+            'sub': user.id
+        }
+        auth_token = jwt.encode(payload, current_app.config['SECRET_KEY'], algorithm='HS256').decode()
+
+        user_id = User.decode_auth_token(auth_token)
+
+        self.assertIsInstance(user_id, str)
+        self.assertEqual(user_id, 'Signature expired. Please log in again.')
 
     def test_add_media(self):
         user = User('testname', 'P@ssw0rd')
@@ -164,6 +186,13 @@ class GoGoMediaLogicTestCase(GoGoMediaTestCase):
         db.session.commit()
 
         self.assertEqual(user, get_user('testname'))
+
+    def test_get_user_by_id(self):
+        user = User('testname', 'P@ssw0rd')
+        db.session.add(user)
+        db.session.commit()
+
+        self.assertEqual(user, get_user_by_id(1))
 
     def test_add_media(self):
         user = User('testname', 'P@ssw0rd')
@@ -405,17 +434,14 @@ class GoGoMediaViewTestCase(GoGoMediaTestCase):
         db.session.add(user)
         db.session.commit()
 
-        self.assertFalse(user.authenticated)
+        response = self.client.post('/login',
+                                    data=json.dumps({'username': 'testname', 'password': 'P@ssw0rd'}),
+                                    content_type='application/json')
+        body = json.loads(response.get_data(as_text=True))
 
-        with self.client:
-            response = self.client.post('/login',
-                                        data=json.dumps({'username': 'testname', 'password': 'P@ssw0rd'}),
-                                        content_type='application/json')
-            body = json.loads(response.get_data(as_text=True))
-
-            self.assertEqual(response.status_code, 200)
-            self.assertTrue(body['success'])
-            self.assertTrue(user.authenticated)
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(body['success'])
+        self.assertIsInstance(body['auth_token'], str)
 
     def test_login_missing_request_body_params(self):
         response = self.client.post('/login',
@@ -441,17 +467,14 @@ class GoGoMediaViewTestCase(GoGoMediaTestCase):
         db.session.add(user)
         db.session.commit()
 
-        self.assertFalse(user.authenticated)
+        response = self.client.post('/login',
+                                    data=json.dumps({'username': 'testname', 'password': 'pass123'}),
+                                    content_type='application/json')
+        body = json.loads(response.get_data(as_text=True))
 
-        with self.client:
-            response = self.client.post('/login',
-                                        data=json.dumps({'username': 'testname', 'password': 'pass123'}),
-                                        content_type='application/json')
-            body = json.loads(response.get_data(as_text=True))
-
-            self.assertEqual(response.status_code, 200)
-            self.assertFalse(body['success'])
-            self.assertFalse(user.authenticated)
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(body['success'])
+        self.assertNotIn('auth_token', body)
 
     def test_login_with_unexisting_user(self):
         response = self.client.post('/login',
@@ -468,17 +491,18 @@ class GoGoMediaViewTestCase(GoGoMediaTestCase):
         db.session.add(user)
         db.session.commit()
 
-        with self.client:
-            self.client.post('/login',
-                             data=json.dumps({'username': 'testname', 'password': 'P@ssw0rd'}),
-                             content_type='application/json')
+        response = self.client.post('/login',
+                                    data=json.dumps({'username': 'testname', 'password': 'P@ssw0rd'}),
+                                    content_type='application/json')
+        body = json.loads(response.get_data(as_text=True))
+        auth_token = body['auth_token']
 
-            response = self.client.get('/logout')
-            body = json.loads(response.get_data(as_text=True))
+        response = self.client.get('/logout')
+        body = json.loads(response.get_data(as_text=True))
 
-            self.assertEqual(response.status_code, 200)
-            self.assertTrue(body['success'])
-            self.assertFalse(user.authenticated)
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(body['success'])
+        # TODO test that the auth_token is blacklisted
 
     def test_add_media(self):
         user = User('testname', 'P@ssw0rd')
@@ -527,36 +551,37 @@ class GoGoMediaViewTestCase(GoGoMediaTestCase):
         db.session.add(user)
         db.session.commit()
 
-        with self.client:
-            # havn't logged in yet
-            response = self.client.put('/user/testname/media',
-                                       data=json.dumps({'name': 'testmedianame'}),
-                                       content_type='application/json')
-            body = json.loads(response.get_data(as_text=True))
+        # havn't logged in yet
+        response = self.client.put('/user/testname/media',
+                                   data=json.dumps({'name': 'testmedianame'}),
+                                   content_type='application/json')
+        body = json.loads(response.get_data(as_text=True))
 
-            self.assertEqual(response.status_code, 200)
-            self.assertFalse(body['success'])
-            self.assertEqual(body['message'],
-                             'You are not logged in as this user. Please log in.')
-            self.assertEqual(user.media, [])
+        self.assertEqual(response.status_code, 401)
+        self.assertFalse(body['success'])
+        self.assertEqual(body['message'],
+                         'No Authorization header found. Please add auth_token in Authorization header.')
+        self.assertEqual(user.media, [])
 
-            self.client.post('/login',
-                             data=json.dumps({'username': 'testname', 'password': 'P@ssw0rd'}),
-                             content_type='application/json')
-            self.assertTrue(user.authenticated)
+        response = self.client.post('/login',
+                                    data=json.dumps({'username': 'testname', 'password': 'P@ssw0rd'}),
+                                    content_type='application/json')
+        body = json.loads(response.get_data(as_text=True))
+        auth_token = body['auth_token']
 
-            # have logged in
-            response = self.client.put('/user/testname/media',
-                                       data=json.dumps({'name': 'testmedianame'}),
-                                       content_type='application/json')
-            body = json.loads(response.get_data(as_text=True))
+        # have logged in
+        response = self.client.put('/user/testname/media',
+                                   headers={'Authorization': 'JWT ' + auth_token},
+                                   data=json.dumps({'name': 'testmedianame'}),
+                                   content_type='application/json')
+        body = json.loads(response.get_data(as_text=True))
 
-            self.assertEqual(response.status_code, 200)
-            self.assertTrue(body['success'])
-            self.assertEqual(body['data'],
-                             {'name': 'testmedianame', 'consumed': False})
-            media_list = get_media('testname')
-            self.assertEqual(media_list, [{'name': 'testmedianame', 'consumed': False}])
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(body['success'])
+        self.assertEqual(body['data'],
+                         {'name': 'testmedianame', 'consumed': False})
+        media_list = get_media('testname')
+        self.assertEqual(media_list, [{'name': 'testmedianame', 'consumed': False}])
 
     def test_login_required_media_endpoint_different_user(self):
         """
@@ -571,39 +596,96 @@ class GoGoMediaViewTestCase(GoGoMediaTestCase):
         db.session.add(user2)
         db.session.commit()
 
-        with self.client:
-            self.client.post('/login',
-                             data=json.dumps({'username': 'testname1', 'password': 'P@ssw0rd'}),
-                             content_type='application/json')
+        response = self.client.post('/login',
+                                    data=json.dumps({'username': 'testname1', 'password': 'P@ssw0rd'}),
+                                    content_type='application/json')
+        body = json.loads(response.get_data(as_text=True))
+        auth_token = body['auth_token']
 
-            self.assertTrue(user1.authenticated)
+        self.assertIn('auth_token', body)
 
-            response = self.client.put('/user/testname2/media',
-                                       data=json.dumps({'name': 'testmedianame'}),
-                                       content_type='application/json')
-            body = json.loads(response.get_data(as_text=True))
+        response = self.client.put('/user/testname2/media',
+                                   headers={'Authorization': 'JWT ' + auth_token},
+                                   data=json.dumps({'name': 'testmedianame'}),
+                                   content_type='application/json')
+        body = json.loads(response.get_data(as_text=True))
 
-            self.assertEqual(response.status_code, 200)
-            self.assertFalse(body['success'])
-            self.assertEqual(body['message'], 'You are not logged in as this user. Please log in.')
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(body['success'])
+        self.assertEqual(body['message'], 'You are not logged in as this user. Please log in.')
 
-            media_list = get_media('testname2')
-            self.assertEqual(media_list, [])
+        media_list = get_media('testname2')
+        self.assertEqual(media_list, [])
+
+    def test_login_invalid_auth_token(self):
+        """
+        This test applies to all the media functions that use the /user/<username>/media endpoint
+        """
+        current_app.config['LOGIN_DISABLED'] = False
+
+        user = User('testname', 'P@ssw0rd')
+        db.session.add(user)
+        db.session.commit()
+
+        response = self.client.post('/login',
+                                    data=json.dumps({'username': 'testname', 'password': 'P@ssw0rd'}),
+                                    content_type='application/json')
+        body = json.loads(response.get_data(as_text=True))
+        auth_token = body['auth_token']
+        # cut off the first character of the auth_token, making it invalid
+        auth_token = auth_token[1:]
+
+        response = self.client.put('/user/testname/media',
+                                   headers={'Authorization': 'JWT ' + auth_token},
+                                   data=json.dumps({'name': 'testmedianame'}),
+                                   content_type='application/json')
+        body = json.loads(response.get_data(as_text=True))
+
+        self.assertEqual(response.status_code, 401)
+        self.assertFalse(body['success'])
+        self.assertEqual(body['message'], 'Invalid token. Please log in again.')
+
+    def test_login_expired_auth_token(self):
+        """
+        This test applies to all the media functions that use the /user/<username>/media endpoint
+        """
+        current_app.config['LOGIN_DISABLED'] = False
+
+        user = User('testname', 'P@ssw0rd')
+        db.session.add(user)
+        db.session.commit()
+
+        # Manually create an auth_token for user that is expired
+        payload = {
+            'exp': datetime.datetime.utcnow() - datetime.timedelta(days=1),
+            'iat': datetime.datetime.utcnow(),
+            'sub': user.id
+        }
+        auth_token = jwt.encode(payload, current_app.config['SECRET_KEY'], algorithm='HS256').decode('utf-8')
+
+        response = self.client.put('/user/testname/media',
+                                   headers={'Authorization': 'JWT ' + auth_token},
+                                   data=json.dumps({'name': 'testmedianame'}),
+                                   content_type='application/json')
+        body = json.loads(response.get_data(as_text=True))
+
+        self.assertEqual(response.status_code, 401)
+        self.assertFalse(body['success'])
+        self.assertEqual(body['message'], 'Signature expired. Please log in again.')
 
     def test_nonexistent_user_media_endpoint(self):
         """
         This test applies to all the media functions that use the /user/<username>/media endpoint
         """
-        with self.client:
-            response = self.client.put('/user/testname/media',
-                                       data=json.dumps({'name': 'testmedianame'}),
-                                       content_type='application/json')
-            body = json.loads(response.get_data(as_text=True))
+        response = self.client.put('/user/testname/media',
+                                   data=json.dumps({'name': 'testmedianame'}),
+                                   content_type='application/json')
+        body = json.loads(response.get_data(as_text=True))
 
-            self.assertEqual(response.status_code, 200)
-            self.assertFalse(body['success'])
-            self.assertEqual(body['message'],
-                             'User doesn\'t exist. Please register user.')
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(body['success'])
+        self.assertEqual(body['message'],
+                         'User doesn\'t exist. Please register user.')
 
     def test_add_media_consumed(self):
         user = User('testname', 'P@ssw0rd')

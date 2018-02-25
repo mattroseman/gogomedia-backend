@@ -1,8 +1,8 @@
-from flask import request, jsonify
-from flask_login import login_user, logout_user, current_user
+from flask import request, jsonify, session
 from database import db
 
 from logic.user import add_user, get_user
+from logic.login import login_required
 
 
 def register():
@@ -70,14 +70,13 @@ def login():
         if user.authenticate_password(password):
             user.authenticated = True
             db.session.commit()
-            login_user(user, remember=True)
 
             auth_token = user.encode_auth_token()
 
             return jsonify({
                 'success': True,
                 'message': 'User successfully logged in.',
-                'auth_token': auth_token.decode()
+                'auth_token': auth_token.decode('utf-8')
             })
 
     return jsonify({
@@ -86,14 +85,12 @@ def login():
     })
 
 
-def logout():
+@login_required
+def logout(logged_in_user):
     """
     logout logs the current user out
     """
-    user = current_user
-    user.authenticated = False
-    db.session.commit()
-    logout_user()
+    # TODO blacklist token?
 
     return jsonify({
         'success': True,

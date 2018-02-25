@@ -1,12 +1,12 @@
 from flask import request, jsonify, current_app
-from flask_login import login_required, current_user
 
 from logic.media import get_media, upsert_media, remove_media
 from logic.user import get_user
+from logic.login import login_required
 
 
 @login_required
-def media(username):
+def media(logged_in_user, username):
     """
     media accepts a PUT request with formdata that matches
         {
@@ -33,7 +33,7 @@ def media(username):
             'message': 'User doesn\'t exist. Please register user.'
         })
 
-    if current_user != user and not current_app.config['LOGIN_DISABLED']:
+    if logged_in_user != user and not current_app.config['LOGIN_DISABLED']:
         # you can't get media for a user you are not logged in as
         return jsonify({
             'success': False,
