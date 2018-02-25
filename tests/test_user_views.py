@@ -1,4 +1,5 @@
 import json
+import unittest
 from base_test_case import GoGoMediaBaseTestCase
 
 from database import db
@@ -112,6 +113,7 @@ class GoGoMediaUserViewsTestCase(GoGoMediaBaseTestCase):
         self.assertFalse(body['success'])
         self.assertEqual(body['message'], 'User doesn\'t exist. Please register user.')
 
+    @unittest.skip('logout not implemented yet')
     def test_logout(self):
         user = User('testname', 'P@ssw0rd')
         db.session.add(user)
