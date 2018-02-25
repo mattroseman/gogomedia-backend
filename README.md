@@ -28,11 +28,11 @@ change the `sqlalchemy.test.url` to the correct value (optional)
 run `python app.py` to start the server                                                                      
                                                                                                              
 ## Testing                                                                                                   
-run `python tests.py` to run the tests                                                                       
+run `python run_tests.py` to run the tests                                                                       
                                                                                                              
 ## Endpoints                                                                                                 
 
-- **/user [POST]** adds a new user
+- **/register [POST]** adds a new user
 	
     Request Body:
     
@@ -53,6 +53,18 @@ run `python tests.py` to run the tests
     'password': 'pass123'
   }
   ```
+
+  Response Body:
+
+  ```
+  {
+    'success': True/False
+    'message': 'description of failure of success
+    'auth_token': 'an authentication token to be put in Header of requests that require login to access
+  }
+  ```
+
+- **/logout [GET]** logs a user out
                                                                                                              
 - **/user/\<username>/media [PUT]** add/update a media element for this user
 
@@ -61,7 +73,7 @@ run `python tests.py` to run the tests
     ```
     {
     	'name': 'medianame',
-        'consumed': true/false (optional)
+      'consumed': true/false (optional)
     }
     ```
     
@@ -80,4 +92,3 @@ run `python tests.py` to run the tests
     	'name': 'medianame'
     }
     ```
-
