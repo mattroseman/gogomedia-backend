@@ -1,6 +1,8 @@
 from flask import request, jsonify, session
 from database import db
 
+from models.blacklisted_token import BlacklistedToken
+
 from logic.user import add_user, get_user
 from logic.login import login_required
 
@@ -39,7 +41,7 @@ def register():
     return jsonify({
         'success': True,
         'message': 'User was successfully registered',
-        'auth_token': auth_token.decode()
+        'auth_token': auth_token
     }), 201
 
 
@@ -76,7 +78,7 @@ def login():
             return jsonify({
                 'success': True,
                 'message': 'User successfully logged in.',
-                'auth_token': auth_token.decode('utf-8')
+                'auth_token': auth_token
             })
 
     return jsonify({
@@ -90,7 +92,10 @@ def logout(logged_in_user):
     """
     logout logs the current user out
     """
-    # TODO blacklist token?
+    auth_token = request.headers.get('Authorization').split(' ')[1]
+    blacklisted_token = BlacklistedToken(auth_token)
+    db.session.add(blacklisted_token)
+    db.session.commit()
 
     return jsonify({
         'success': True,

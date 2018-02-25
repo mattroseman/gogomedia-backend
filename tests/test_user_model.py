@@ -46,14 +46,14 @@ class GoGoMediaUserModelTestCase(GoGoMediaBaseTestCase):
 
         auth_token = user.encode_auth_token()
 
-        self.assertIsInstance(auth_token, bytes)
+        self.assertIsInstance(auth_token, str)
 
     def test_user_decode_auth_token(self):
         user = User('testname', 'P@ssw0rd')
         db.session.add(user)
         db.session.commit()
 
-        auth_token = user.encode_auth_token().decode()
+        auth_token = user.encode_auth_token()
 
         user_id = User.decode_auth_token(auth_token)
 
@@ -65,7 +65,7 @@ class GoGoMediaUserModelTestCase(GoGoMediaBaseTestCase):
         db.session.add(user)
         db.session.commit()
 
-        auth_token = user.encode_auth_token().decode()
+        auth_token = user.encode_auth_token()
         # remove first character to make auth_token invalid
         auth_token = auth_token[1:]
 

@@ -5,6 +5,7 @@ from base_test_case import GoGoMediaBaseTestCase
 from database import db
 
 from models.user import User
+from models.blacklisted_token import BlacklistedToken
 
 
 class GoGoMediaUserViewsTestCase(GoGoMediaBaseTestCase):
@@ -113,7 +114,6 @@ class GoGoMediaUserViewsTestCase(GoGoMediaBaseTestCase):
         self.assertFalse(body['success'])
         self.assertEqual(body['message'], 'User doesn\'t exist. Please register user.')
 
-    @unittest.skip('logout not implemented yet')
     def test_logout(self):
         user = User('testname', 'P@ssw0rd')
         db.session.add(user)
@@ -125,9 +125,13 @@ class GoGoMediaUserViewsTestCase(GoGoMediaBaseTestCase):
         body = json.loads(response.get_data(as_text=True))
         auth_token = body['auth_token']
 
-        response = self.client.get('/logout')
+        response = self.client.get('/logout', headers={'Authorization': 'JWT ' + auth_token})
         body = json.loads(response.get_data(as_text=True))
 
         self.assertEqual(response.status_code, 200)
         self.assertTrue(body['success'])
-        # TODO test that the auth_token is blacklisted
+
+        blacklisted_token = BlacklistedToken.query.filter_by(token=auth_token).first()
+
+        self.assertIsNotNone(blacklisted_token)
+        self.assertEqual(blacklisted_token.token, auth_token)
