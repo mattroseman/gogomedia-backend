@@ -15,6 +15,12 @@ def login_required(f):
 
         auth_header = request.headers.get('Authorization')
         if auth_header:
+            if len(auth_header.split(' ')) != 2:
+                return jsonify({
+                    'success': False,
+                    'message': 'Malformed Authorization header. Should match \'Authorization\': \'JWT <auth_token>\'.'
+                }), 400
+
             auth_token = auth_header.split(' ')[1]
             user_id = User.decode_auth_token(auth_token)
 

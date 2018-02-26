@@ -93,6 +93,34 @@ class GoGoMediaMediaViewsTestCase(GoGoMediaBaseTestCase):
         media_list = get_media('testname')
         self.assertEqual(media_list, [{'name': 'testmedianame', 'consumed': False}])
 
+    def test_login_required_media_endpoint_malformed_authorization_header(self):
+        """
+        This test applies to all the media functions that use the /user/<username>/media endpoint
+        """
+        # temporarily enable login for this test
+        current_app.config['LOGIN_DISABLED'] = False
+
+        user = User('testname', 'P@ssw0rd')
+        db.session.add(user)
+        db.session.commit()
+
+        response = self.client.post('/login',
+                                    data=json.dumps({'username': 'testname', 'password': 'P@ssw0rd'}),
+                                    content_type='application/json')
+        body = json.loads(response.get_data(as_text=True))
+        auth_token = body['auth_token']
+
+        response = self.client.put('/user/testname/media',
+                                   headers={'Authorization': auth_token},
+                                   data=json.dumps({'name': 'testmedianame'}),
+                                   content_type='application/json')
+        body = json.loads(response.get_data(as_text=True))
+
+        self.assertEqual(response.status_code, 400)
+        self.assertFalse(body['success'])
+        self.assertEqual(body['message'],
+                         'Malformed Authorization header. Should match \'Authorization\': \'JWT <auth_token>\'.')
+
     def test_login_required_media_endpoint_different_user(self):
         """
         This test applies to all the media functions that use the /user/<username>/media endpoint
