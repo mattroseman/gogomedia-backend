@@ -80,6 +80,11 @@ def login():
                 'message': 'User successfully logged in.',
                 'auth_token': auth_token
             })
+        else:
+            return jsonify({
+                'success': False,
+                'message': 'Password is not correct. Please log in again.'
+            })
 
     return jsonify({
         'success': False,

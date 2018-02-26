@@ -102,6 +102,7 @@ class GoGoMediaUserViewsTestCase(GoGoMediaBaseTestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertFalse(body['success'])
+        self.assertEqual(body['message'], 'Password is not correct. Please log in again.')
         self.assertNotIn('auth_token', body)
 
     def test_login_with_unexisting_user(self):
