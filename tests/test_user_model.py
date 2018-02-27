@@ -72,7 +72,7 @@ class GoGoMediaUserModelTestCase(GoGoMediaBaseTestCase):
         user_id = User.decode_auth_token(auth_token)
 
         self.assertIsInstance(user_id, str)
-        self.assertEqual(user_id, 'Invalid token. Please log in again.')
+        self.assertEqual(user_id, 'invalid token')
 
     def test_user_decode_auth_token_expired(self):
         user = User('testname', 'P@ssw0rd')
@@ -90,4 +90,4 @@ class GoGoMediaUserModelTestCase(GoGoMediaBaseTestCase):
         user_id = User.decode_auth_token(auth_token)
 
         self.assertIsInstance(user_id, str)
-        self.assertEqual(user_id, 'Signature expired. Please log in again.')
+        self.assertEqual(user_id, 'signature expired')

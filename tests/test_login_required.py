@@ -38,8 +38,7 @@ class GoGoMediaLoginRequiredTestCase(GoGoMediaBaseTestCase):
 
         self.assertEqual(response.status_code, 401)
         self.assertFalse(body['success'])
-        self.assertEqual(body['message'],
-                         'No Authorization header found. Please add auth_token in Authorization header.')
+        self.assertEqual(body['message'], 'no authorization header')
         self.assertEqual(user.media, [])
 
         response = self.client.post('/login',
@@ -82,10 +81,9 @@ class GoGoMediaLoginRequiredTestCase(GoGoMediaBaseTestCase):
                                    content_type='application/json')
         body = json.loads(response.get_data(as_text=True))
 
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, 422)
         self.assertFalse(body['success'])
-        self.assertEqual(body['message'],
-                         'Malformed Authorization header. Should match \'Authorization\': \'JWT <auth_token>\'.')
+        self.assertEqual(body['message'], 'authorization header malformed')
 
     def test_login_required_media_endpoint_different_user(self):
         """
@@ -111,9 +109,9 @@ class GoGoMediaLoginRequiredTestCase(GoGoMediaBaseTestCase):
                                    content_type='application/json')
         body = json.loads(response.get_data(as_text=True))
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 401)
         self.assertFalse(body['success'])
-        self.assertEqual(body['message'], 'You are not logged in as this user. Please log in.')
+        self.assertEqual(body['message'], 'not logged in as this user')
 
         media_list = get_media('testname2')
         self.assertEqual(media_list, [])
@@ -144,7 +142,7 @@ class GoGoMediaLoginRequiredTestCase(GoGoMediaBaseTestCase):
 
         self.assertEqual(response.status_code, 401)
         self.assertFalse(body['success'])
-        self.assertEqual(body['message'], 'Token blacklisted. Please log in again.')
+        self.assertEqual(body['message'], 'auth token blacklisted')
 
     def test_login_invalid_auth_token(self):
         """
@@ -170,7 +168,7 @@ class GoGoMediaLoginRequiredTestCase(GoGoMediaBaseTestCase):
 
         self.assertEqual(response.status_code, 401)
         self.assertFalse(body['success'])
-        self.assertEqual(body['message'], 'Invalid token. Please log in again.')
+        self.assertEqual(body['message'], 'invalid token')
 
     def test_login_expired_auth_token(self):
         """
@@ -196,4 +194,4 @@ class GoGoMediaLoginRequiredTestCase(GoGoMediaBaseTestCase):
 
         self.assertEqual(response.status_code, 401)
         self.assertFalse(body['success'])
-        self.assertEqual(body['message'], 'Signature expired. Please log in again.')
+        self.assertEqual(body['message'], 'signature expired')

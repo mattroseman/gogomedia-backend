@@ -16,12 +16,12 @@ def register():
     if 'username' not in body:
         return jsonify({
             'success': False,
-            'message': 'Request body is missing the parameter \'username\''
+            'message': 'missing parameter \'username\''
         }), 422
     if 'password' not in body:
         return jsonify({
             'success': False,
-            'message': 'Request body is missing the parameter \'password\''
+            'message': 'missing parameter \'password\''
         }), 422
 
     username = body['username']
@@ -31,8 +31,8 @@ def register():
     if get_user(username):
         return jsonify({
             'success': False,
-            'message': 'This username is already taken. Please choose another.'
-        })
+            'message': 'username taken'
+        }), 422
 
     user = add_user(username, password)
 
@@ -40,7 +40,7 @@ def register():
 
     return jsonify({
         'success': True,
-        'message': 'User was successfully registered',
+        'message': 'user successfully registered',
         'auth_token': auth_token
     }), 201
 
@@ -55,12 +55,12 @@ def login():
     if 'username' not in body:
         return jsonify({
             'success': False,
-            'message': 'Request body is missing the parameter \'username\''
+            'message': 'missing parameter \'username\''
         }), 422
     if 'password' not in body:
         return jsonify({
             'success': False,
-            'message': 'Request body is missing the parameter \'password\''
+            'message': 'missing parameter \'password\''
         }), 422
 
     username = body['username']
@@ -77,19 +77,19 @@ def login():
 
             return jsonify({
                 'success': True,
-                'message': 'User successfully logged in.',
+                'message': 'user successfully logged in',
                 'auth_token': auth_token
             })
         else:
             return jsonify({
                 'success': False,
-                'message': 'Password is not correct. Please log in again.'
-            })
+                'message': 'incorrect password'
+            }), 401
 
     return jsonify({
         'success': False,
-        'message': 'User doesn\'t exist. Please register user.'
-    })
+        'message': 'user doesn\'t exist'
+    }), 422
 
 
 @login_required
@@ -104,5 +104,5 @@ def logout(logged_in_user):
 
     return jsonify({
         'success': True,
-        'message': 'User successfully logged out.'
+        'message': 'user successfully logged out'
     })

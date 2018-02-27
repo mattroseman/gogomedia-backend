@@ -18,8 +18,8 @@ def login_required(f):
             if len(auth_header.split(' ')) != 2:
                 return jsonify({
                     'success': False,
-                    'message': 'Malformed Authorization header. Should match \'Authorization\': \'JWT <auth_token>\'.'
-                }), 400
+                    'message': 'authorization header malformed'
+                }), 422
 
             auth_token = auth_header.split(' ')[1]
             user_id = User.decode_auth_token(auth_token)
@@ -37,7 +37,7 @@ def login_required(f):
         else:
             return jsonify({
                 'success': False,
-                'message': 'No Authorization header found. Please add auth_token in Authorization header.'
+                'message': 'no authorization header'
             }), 401
 
     return decorated_function

@@ -32,7 +32,7 @@ class GoGoMediaUserViewsTestCase(GoGoMediaBaseTestCase):
 
         self.assertEqual(response.status_code, 422)
         self.assertFalse(body['success'])
-        self.assertEqual(body['message'], 'Request body is missing the parameter \'username\'')
+        self.assertEqual(body['message'], 'missing parameter \'username\'')
 
         response = self.client.post('/register',
                                     data=json.dumps({'username': 'testname'}),
@@ -41,7 +41,7 @@ class GoGoMediaUserViewsTestCase(GoGoMediaBaseTestCase):
 
         self.assertEqual(response.status_code, 422)
         self.assertFalse(body['success'])
-        self.assertEqual(body['message'], 'Request body is missing the parameter \'password\'')
+        self.assertEqual(body['message'], 'missing parameter \'password\'')
 
     def test_register_existing_user(self):
         user = User('testname', 'P@ssw0rd')
@@ -53,9 +53,9 @@ class GoGoMediaUserViewsTestCase(GoGoMediaBaseTestCase):
                                     content_type='application/json')
         body = json.loads(response.get_data(as_text=True))
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 422)
         self.assertFalse(body['success'])
-        self.assertEqual(body['message'], 'This username is already taken. Please choose another.')
+        self.assertEqual(body['message'], 'username taken')
 
     def test_login(self):
         user = User('testname', 'P@ssw0rd')
@@ -79,7 +79,7 @@ class GoGoMediaUserViewsTestCase(GoGoMediaBaseTestCase):
 
         self.assertEqual(response.status_code, 422)
         self.assertFalse(body['success'])
-        self.assertEqual(body['message'], 'Request body is missing the parameter \'username\'')
+        self.assertEqual(body['message'], 'missing parameter \'username\'')
 
         response = self.client.post('/login',
                                     data=json.dumps({'username': 'testname'}),
@@ -88,7 +88,7 @@ class GoGoMediaUserViewsTestCase(GoGoMediaBaseTestCase):
 
         self.assertEqual(response.status_code, 422)
         self.assertFalse(body['success'])
-        self.assertEqual(body['message'], 'Request body is missing the parameter \'password\'')
+        self.assertEqual(body['message'], 'missing parameter \'password\'')
 
     def test_invalid_login(self):
         user = User('testname', 'P@ssw0rd')
@@ -100,9 +100,9 @@ class GoGoMediaUserViewsTestCase(GoGoMediaBaseTestCase):
                                     content_type='application/json')
         body = json.loads(response.get_data(as_text=True))
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 401)
         self.assertFalse(body['success'])
-        self.assertEqual(body['message'], 'Password is not correct. Please log in again.')
+        self.assertEqual(body['message'], 'incorrect password')
         self.assertNotIn('auth_token', body)
 
     def test_login_with_unexisting_user(self):
@@ -111,9 +111,9 @@ class GoGoMediaUserViewsTestCase(GoGoMediaBaseTestCase):
                                     content_type='application/json')
         body = json.loads(response.get_data(as_text=True))
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 422)
         self.assertFalse(body['success'])
-        self.assertEqual(body['message'], 'User doesn\'t exist. Please register user.')
+        self.assertEqual(body['message'], 'user doesn\'t exist')
 
     def test_logout(self):
         user = User('testname', 'P@ssw0rd')

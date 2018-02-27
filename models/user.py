@@ -51,12 +51,12 @@ class User(db.Model):
             representing an error message if auth token decoding failed.
         """
         if BlacklistedToken.check_blacklist(auth_token):
-            return 'Token blacklisted. Please log in again.'
+            return 'auth token blacklisted'
 
         try:
             payload = jwt.decode(auth_token, current_app.config['SECRET_KEY'])
             return payload['sub']
         except jwt.ExpiredSignatureError:
-            return 'Signature expired. Please log in again.'
+            return 'signature expired'
         except jwt.InvalidTokenError:
-            return 'Invalid token. Please log in again.'
+            return 'invalid token'

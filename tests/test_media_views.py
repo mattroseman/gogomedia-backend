@@ -42,7 +42,7 @@ class GoGoMediaMediaViewsTestCase(GoGoMediaBaseTestCase):
 
         self.assertEqual(response.status_code, 422)
         self.assertFalse(body['success'])
-        self.assertEqual(body['message'], 'Request body is missing the parameter \'name\'.')
+        self.assertEqual(body['message'], 'missing parameter \'name\'')
 
     def test_nonexistent_user_media_endpoint(self):
         """
@@ -53,10 +53,9 @@ class GoGoMediaMediaViewsTestCase(GoGoMediaBaseTestCase):
                                    content_type='application/json')
         body = json.loads(response.get_data(as_text=True))
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 422)
         self.assertFalse(body['success'])
-        self.assertEqual(body['message'],
-                         'User doesn\'t exist. Please register user.')
+        self.assertEqual(body['message'], 'user doesn\'t exist')
 
     def test_add_media_consumed(self):
         user = User('testname', 'P@ssw0rd')
@@ -248,7 +247,7 @@ class GoGoMediaMediaViewsTestCase(GoGoMediaBaseTestCase):
 
         self.assertEqual(response.status_code, 422)
         self.assertFalse(body['success'])
-        self.assertEqual(body['message'], 'Request body is missing the parameter \'name\'.')
+        self.assertEqual(body['message'], 'missing parameter \'name\'')
 
     def test_delete_unexisting_media(self):
         user = User('testname', 'P@ssw0rd')
