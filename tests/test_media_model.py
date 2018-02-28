@@ -125,3 +125,15 @@ class GoGoMediaMediaModelTestCase(GoGoMediaBaseTestCase):
         db.session.commit()
 
         self.assertFalse(media in db.session)
+
+    def test_as_dict(self):
+        user = User('testname', 'P@ssw0rd')
+        db.session.add(user)
+        db.session.commit()
+
+        media = Media('testmedianame', user.id, consumed=True, medium='literature')
+        self.assertDictEqual(media.as_dict(), {
+            'medianame': 'testmedianame',
+            'consumed': True,
+            'medium': 'literature'
+        })

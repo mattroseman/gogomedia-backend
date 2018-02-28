@@ -19,3 +19,13 @@ class Media(db.Model):
     def __repr__(self):
         return '<Media(medianame={}, user={}, consumed={}, medium={})>'.format(
             self.medianame, self.user, self.consumed, self.medium)
+
+    def as_dict(self):
+        """
+        returns a dict representing this media element. Used when returning media data as json in response
+        """
+        return {
+            'medianame': self.medianame,
+            'consumed': self.consumed,
+            'medium': self.medium
+        }
