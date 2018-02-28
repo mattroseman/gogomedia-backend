@@ -78,7 +78,18 @@ class GoGoMediaMediaModelTestCase(GoGoMediaBaseTestCase):
 
         self.assertEqual(media.medium, 'other')
 
-    def test_update_media(self):
+    def test_add_media_with_unknown_medium_type(self):
+        user = User('testname', 'P@ssw0rd')
+        db.session.add(user)
+        db.session.commit()
+
+        media = Media('testmedianame', user.id, medium='foobar')
+        db.session.add(media)
+        db.session.commit()
+
+        self.assertEqual(media.medium, 'other')
+
+    def test_update_media_consumed(self):
         user = User('testname', 'P@ssw0rd')
         db.session.add(user)
         db.session.commit()
@@ -93,6 +104,22 @@ class GoGoMediaMediaModelTestCase(GoGoMediaBaseTestCase):
         db.session.commit()
 
         self.assertTrue(media.consumed)
+
+    def test_update_media_medium(self):
+        user = User('testname', 'P@ssw0rd')
+        db.session.add(user)
+        db.session.commit()
+
+        media = Media('testmedianame', user.id, medium='literature')
+        db.session.add(media)
+        db.session.commit()
+
+        self.assertEqual(media.medium, 'literature')
+
+        media.medium = 'audio'
+        db.session.commit()
+
+        self.assertEqual(media.medium, 'audio')
 
     def test_remove_media(self):
         user = User('testname', 'P@ssw0rd')
