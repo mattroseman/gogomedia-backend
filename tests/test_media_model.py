@@ -78,17 +78,6 @@ class GoGoMediaMediaModelTestCase(GoGoMediaBaseTestCase):
 
         self.assertEqual(media.medium, 'other')
 
-    def test_add_media_with_unknown_medium_type(self):
-        user = User('testname', 'P@ssw0rd')
-        db.session.add(user)
-        db.session.commit()
-
-        media = Media('testmedianame', user.id, medium='foobar')
-        db.session.add(media)
-        db.session.commit()
-
-        self.assertEqual(media.medium, 'other')
-
     def test_update_media_consumed(self):
         user = User('testname', 'P@ssw0rd')
         db.session.add(user)

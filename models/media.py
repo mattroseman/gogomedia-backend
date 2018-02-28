@@ -14,10 +14,7 @@ class Media(db.Model):
         self.medianame = medianame
         self.user = userid
         self.consumed = consumed
-        if medium not in {'film', 'audio', 'literature', 'other'}:
-            self.medium = 'other'
-        else:
-            self.medium = medium
+        self.medium = medium
 
     def __repr__(self):
         return '<Media(medianame={}, user={}, consumed={}, medium={})>'.format(
