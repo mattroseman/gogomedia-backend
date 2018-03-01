@@ -61,6 +61,49 @@ class GoGoMediaMediaViewsTestCase(GoGoMediaBaseTestCase):
         self.assertFalse(body['success'])
         self.assertEqual(body['message'], 'missing parameter \'name\'')
 
+    def test_add_meida_mistyped_request_name_param(self):
+        user = User('testname', 'P@ssw0rd')
+        db.session.add(user)
+        db.session.commit()
+
+        response = self.client.put('/user/testname/media',
+                                   data=json.dumps({'name': 23}),
+                                   content_type='application/json')
+        body = json.loads(response.get_data(as_text=True))
+
+        self.assertEqual(response.status_code, 422)
+        self.assertFalse(body['success'])
+        self.assertEqual(body['message'], 'parameter \'name\' must be type string')
+
+    def test_add_media_mistyped_request_consumed_param(self):
+        user = User('testname', 'P@ssw0rd')
+        db.session.add(user)
+        db.session.commit()
+
+        response = self.client.put('/user/testname/media',
+                                   data=json.dumps({'name': 'testmedianame', 'consumed': 'true'}),
+                                   content_type='application/json')
+        body = json.loads(response.get_data(as_text=True))
+
+        self.assertEqual(response.status_code, 422)
+        self.assertFalse(body['success'])
+        self.assertEqual(body['message'], 'parameter \'consumed\' must be type boolean')
+
+    def test_add_media_mistyped_request_medium_param(self):
+        user = User('testname', 'P@ssw0rd')
+        db.session.add(user)
+        db.session.commit()
+
+        response = self.client.put('/user/testname/media',
+                                   data=json.dumps({'name': 'testmedianame', 'medium': 'aduio'}),
+                                   content_type='application/json')
+        body = json.loads(response.get_data(as_text=True))
+
+        self.assertEqual(response.status_code, 422)
+        self.assertFalse(body['success'])
+        self.assertEqual(body['message'],
+                         'medium parameter must be \'film\', \'audio\', \'literature\', or \'other\'')
+
     def test_add_media_consumed(self):
         user = User('testname', 'P@ssw0rd')
         db.session.add(user)
@@ -466,6 +509,20 @@ class GoGoMediaMediaViewsTestCase(GoGoMediaBaseTestCase):
         self.assertEqual(response.status_code, 422)
         self.assertFalse(body['success'])
         self.assertEqual(body['message'], 'missing parameter \'name\'')
+
+    def test_delete_media_mistyped_request_body_param(self):
+        user = User('testname', 'P@ssw0rd')
+        db.session.add(user)
+        db.session.commit()
+
+        response = self.client.delete('/user/testname/media',
+                                      data=json.dumps({'name': 123}),
+                                      content_type='application/json')
+        body = json.loads(response.get_data(as_text=True))
+
+        self.assertEqual(response.status_code, 422)
+        self.assertFalse(body['success'])
+        self.assertEqual(body['message'], 'parameter \'name\' must be type string')
 
     def test_delete_unexisting_media(self):
         user = User('testname', 'P@ssw0rd')
