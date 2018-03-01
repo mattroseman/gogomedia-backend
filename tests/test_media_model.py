@@ -133,7 +133,7 @@ class GoGoMediaMediaModelTestCase(GoGoMediaBaseTestCase):
 
         media = Media('testmedianame', user.id, consumed=True, medium='literature')
         self.assertDictEqual(media.as_dict(), {
-            'medianame': 'testmedianame',
+            'name': 'testmedianame',
             'consumed': True,
             'medium': 'literature'
         })

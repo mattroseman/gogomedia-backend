@@ -13,10 +13,14 @@ def media(logged_in_user, username):
             'name': a string representing the name of the media to insert/update
             'consumed': a boolean indicating if this media has been consumed or not
                 if consumed isn't present, it defaults to False
+            'medium': a string indicating the type of this media
+                represents an Enum of possible values ('film', 'audio', 'literature', 'other')
         }
 
     media accepts a GET request and returns all the media associated with the user specified by username
         a request arg 'consumed' can be set to yes or no, and only consumed or unconsumed media will be returned
+        a request arg 'medium' can be set to 'film', 'audio', 'literature', or 'other' and only media with the same
+            medium will be returned
         if no request arg is present, all media will be returned
 
     media accepts a DELETE request with formdata that matches
@@ -43,32 +47,28 @@ def media(logged_in_user, username):
         }), 401
 
     if request.method == 'GET':
-        if 'consumed' in request.args:
-            if request.args.get('consumed') in ['True', 'true', 'T', 't', 'Yes', 'yes', 'Y', 'y']:
-                return jsonify({
-                    'success': True,
-                    'message': 'successfully got all consumed media for the logged in user',
-                    'data': get_media(username, consumed=True)
-                })
-            elif request.args.get('consumed') in ['False', 'false', 'F', 'f', 'No', 'no', 'N', 'n']:
-                return jsonify({
-                    'success': True,
-                    'message': 'successfully got all unconsumed media for the logged in user',
-                    'data': get_media(username, consumed=False)
-                })
-            else:
-                # return malformed parameters response
-                return jsonify({
-                    'success': False,
-                    'message': 'consumed url parameter must be \'yes\' or \'no\''
-                }), 422
-        else:
+        # Check if url parameters have acceptible values
+        if 'consumed' in request.args and request.args.get('consumed') not in ['yes', 'no']:
             return jsonify({
-                'success': True,
-                'message': 'successfully got all media for the logged in user',
-                'data': get_media(username)
-            })
+                'success': False,
+                'message': 'consumed url parameter must be \'yes\' or \'no\''
+            }), 422
 
+        if 'medium' in request.args and request.args.get('medium') not in ['film', 'audio', 'literature', 'other']:
+            return jsonify({
+                'success': False,
+                'message': 'medium url parameter must be \'film\', \'audio\', \'literature\', or \'other\''
+            }), 422
+
+        media_list = get_media(username,
+                               request.args.get('consumed') == 'yes' if 'consumed' in request.args else None,
+                               request.args.get('medium') if 'medium' in request.args else None)
+
+        return jsonify({
+            'success': True,
+            'message': 'successfully got media for logged in user',
+            'data': list(map(lambda media: media.as_dict(), media_list))
+        })
     elif request.method == 'PUT':
         if 'name' not in body:
             # return malformed parameters response if 'name' isn't present
@@ -79,17 +79,20 @@ def media(logged_in_user, username):
 
         medianame = body['name']
 
-        consumed = False
+        consumed = None
         if 'consumed' in body:
             consumed = body['consumed']
 
-        upsert_media(username, medianame, consumed)
+        medium = None
+        if 'medium' in body:
+            medium = body['medium']
 
-        # TODO possibly have upsert_media return the media element, and simply put that in the return parameter 'data'
+        media = upsert_media(username, medianame, consumed, medium)
+
         return jsonify({
             'success': True,
             'message': 'successfully added/updated media element',
-            'data': {'name': medianame, 'consumed': consumed}
+            'data': media.as_dict()
         })
     else:  # request.method == 'DELETE'
         if 'name' not in body:

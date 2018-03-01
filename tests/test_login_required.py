@@ -56,10 +56,11 @@ class GoGoMediaLoginRequiredTestCase(GoGoMediaBaseTestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertTrue(body['success'])
-        self.assertEqual(body['data'],
-                         {'name': 'testmedianame', 'consumed': False})
-        media_list = get_media('testname')
-        self.assertEqual(media_list, [{'name': 'testmedianame', 'consumed': False}])
+        self.assertEqual(body['data'], {
+            'name': 'testmedianame',
+            'consumed': False,
+            'medium': 'other'
+        })
 
     def test_login_required_media_endpoint_malformed_authorization_header(self):
         """
