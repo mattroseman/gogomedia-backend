@@ -66,7 +66,7 @@ def media(logged_in_user, username):
 
         return jsonify({
             'success': True,
-            'message': 'successfully got media for logged in user',
+            'message': 'successfully got media for the logged in user',
             'data': list(map(lambda media: media.as_dict(), media_list))
         })
     elif request.method == 'PUT':

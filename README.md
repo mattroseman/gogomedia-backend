@@ -96,7 +96,8 @@ Response Format:
     ```
     {
     	'name': 'medianame',
-     	'consumed': true/false (optional)
+     	'consumed': true/false (optional),
+        'medium': 'other'/'film'/'audio'/'literature' (optional)
     }
     ```
     
@@ -113,25 +114,25 @@ Response Format:
     
     - 422: 'user doesn\'t exist'
     - 401: 'not logged in as this user'
-    - 200: 'successfully got all media for the logged in user'
+    - 200: 'successfully got media for the logged in user'
 
-- **/user/\<username>/media?consumed=yes [GET] (login required)** get all consumed media elements for this user
-
-	Response Messages:
-    
-    - 422: 'user doesn\'t exist'
-    - 401: 'not logged in as this user'
-    - 422: 'consumed url parameter must be \'yes\' or \'no\''
-    - 200: 'got all consumed media for this user'
-
-- **/user/\<username>/media?consumed=no [GET] (login required)** get all unconsumed media elements for this user
+- **/user/\<username>/media?consumed=yes/no [GET] (login required)** get all consumed or unconsumed media elements for this user
 
 	Response Messages:
     
     - 422: 'user doesn\'t exist'
     - 401: 'not logged in as this user'
     - 422: 'consumed url parameter must be \'yes\' or \'no\''
-    - 200: 'got all unconsumed media for this user'
+    - 200: 'successfully got media for the logged in user'
+
+- **/user/\<username>/media?medium=other/film/audio/literature [GET] (login required)** get all media elements for this user of a specified medium type
+
+	Response Messages:
+    
+    - 422: 'user doesn\'t exist'
+    - 401: 'not logged in as this user'
+    - 422: 'medium url parameter must be \'film\', \'audio\', \'literature\', or \'other\''
+    - 200: 'successfully got media for the logged in user'
 
 - **/user/\<username>/media [DELETE] (login required)** delete a media element for this user
 
