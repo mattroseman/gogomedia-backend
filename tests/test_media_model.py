@@ -4,10 +4,21 @@ from sqlalchemy.exc import StatementError
 from database import db
 
 from models.user import User
-from models.media import Media
+from models.media import Media, mediums
 
 
 class GoGoMediaMediaModelTestCase(GoGoMediaBaseTestCase):
+    def test_construct_media_with_invalid_medium(self):
+        user = User('testname', 'P@ssw0rd')
+        db.session.add(user)
+        db.session.commit()
+
+        with self.assertRaises(ValueError) as e:
+            media = Media('testmedianame', user.id, medium='asdf')
+
+        self.assertEqual(str(e.exception),
+                         'medium must be one of these values: {}'.format(mediums))
+
     def test_add_media(self):
         user = User('testname', 'P@ssw0rd')
         db.session.add(user)

@@ -1,6 +1,7 @@
 from database import db
 
-medium_type = db.Enum('film', 'audio', 'literature', 'other', name='medium_type', validate_strings=True)
+mediums = {'film', 'audio', 'literature', 'other'}
+medium_type = db.Enum(*mediums, name='medium_type', validate_strings=True)
 
 
 class Media(db.Model):
@@ -11,6 +12,9 @@ class Media(db.Model):
     medium = db.Column('medium', medium_type, default='other')
 
     def __init__(self, medianame, userid, consumed=False, medium='other'):
+        if medium not in mediums:
+            raise ValueError('medium must be one of these values: {}'.format(mediums))
+
         self.medianame = medianame
         self.user = userid
         self.consumed = consumed
