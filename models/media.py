@@ -3,26 +3,31 @@ from database import db
 mediums = {'film', 'audio', 'literature', 'other'}
 medium_type = db.Enum(*mediums, name='medium_type', validate_strings=True)
 
+consumed_states = {'not started', 'started', 'finished'}
+consumed_state_type = db.Enum(*consumed_states, name='consumed_state_type', validate_strings=True)
+
 
 class Media(db.Model):
     __tablename__ = 'media'
     medianame = db.Column('medianame', db.String(80), primary_key=True)
     user = db.Column('user', db.Integer, db.ForeignKey('users.id'), primary_key=True)
-    consumed = db.Column('consumed', db.Boolean, default=False)
     medium = db.Column('medium', medium_type, default='other')
+    consumed_state = db.Column('consumed_state', consumed_state_type, default='not started')
 
-    def __init__(self, medianame, userid, consumed=False, medium='other'):
+    def __init__(self, medianame, userid, medium='other', consumed_state='not started'):
         if medium not in mediums:
             raise ValueError('medium must be one of these values: {}'.format(mediums))
+        if consumed_state not in consumed_states:
+            raise ValueError('consumed_state must be on of these values: {}'.format(consumed_states))
 
         self.medianame = medianame
         self.user = userid
-        self.consumed = consumed
         self.medium = medium
+        self.consumed_state = consumed_state
 
     def __repr__(self):
-        return '<Media(medianame={}, user={}, consumed={}, medium={})>'.format(
-            self.medianame, self.user, self.consumed, self.medium)
+        return '<Media(medianame={}, user={}, medium={}, consumed_state={})>'.format(
+            self.medianame, self.user, self.medium, self.consumed_state)
 
     def as_dict(self):
         """
@@ -30,6 +35,6 @@ class Media(db.Model):
         """
         return {
             'name': self.medianame,
-            'consumed': self.consumed,
-            'medium': self.medium
+            'medium': self.medium,
+            'consumed_state': self.consumed_state
         }

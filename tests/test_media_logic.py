@@ -19,21 +19,21 @@ class GoGoMediaMediaLogicTestCase(GoGoMediaBaseTestCase):
         self.assertIsNotNone(media)
         self.assertIn(media, db.session)
         self.assertEqual(media.medianame, 'testmedianame')
-        self.assertFalse(media.consumed)
         self.assertEqual(media.medium, 'other')
+        self.assertEqual(media.consumed_state, 'not started')
 
-    def test_add_media_with_consumed_argument(self):
+    def test_add_media_with_consumed_state_argument(self):
         user = User('testname', 'P@ssw0rd')
         db.session.add(user)
         db.session.commit()
 
-        media = add_media(user.id, 'testmedianame', consumed=True)
+        media = add_media(user.id, 'testmedianame', consumed_state='finished')
 
         self.assertIsNotNone(media)
         self.assertIn(media, db.session)
         self.assertEqual(media.medianame, 'testmedianame')
-        self.assertTrue(media.consumed)
         self.assertEqual(media.medium, 'other')
+        self.assertEqual(media.consumed_state, 'finished')
 
     def test_add_media_with_medium_argument(self):
         user = User('testname', 'P@ssw0rd')
@@ -45,10 +45,10 @@ class GoGoMediaMediaLogicTestCase(GoGoMediaBaseTestCase):
         self.assertIsNotNone(media)
         self.assertIn(media, db.session)
         self.assertEqual(media.medianame, 'testmedianame')
-        self.assertFalse(media.consumed)
         self.assertEqual(media.medium, 'audio')
+        self.assertEqual(media.consumed_state, 'not started')
 
-    def test_update_media_consumed_property(self):
+    def test_update_media_consumed_state_property(self):
         user = User('testname', 'P@ssw0rd')
         db.session.add(user)
         db.session.commit()
@@ -57,20 +57,20 @@ class GoGoMediaMediaLogicTestCase(GoGoMediaBaseTestCase):
         db.session.add(media)
         db.session.commit()
 
-        self.assertFalse(media.consumed)
+        self.assertEqual(media.consumed_state, 'not started')
         self.assertEqual(media.medium, 'other')
 
-        returned_media = update_media(user.id, media.medianame, consumed=True)
+        returned_media = update_media(user.id, media.medianame, consumed_state='started')
 
         self.assertEqual(returned_media, media)
-        self.assertTrue(media.consumed)
         self.assertEqual(media.medium, 'other')
+        self.assertEqual(media.consumed_state, 'started')
 
-        returned_media = update_media(user.id, media.medianame, consumed=False)
+        returned_media = update_media(user.id, media.medianame, consumed_state='finished')
 
         self.assertEqual(returned_media, media)
-        self.assertFalse(media.consumed)
         self.assertEqual(media.medium, 'other')
+        self.assertEqual(media.consumed_state, 'finished')
 
     def test_update_media_medium_property(self):
         user = User('testname', 'P@ssw0rd')
@@ -86,29 +86,29 @@ class GoGoMediaMediaLogicTestCase(GoGoMediaBaseTestCase):
         returned_media = update_media(user.id, media.medianame, medium='film')
 
         self.assertEqual(returned_media, media)
-        self.assertFalse(media.consumed)
         self.assertEqual(media.medium, 'film')
+        self.assertEqual(media.consumed_state, 'not started')
 
         returned_media = update_media(user.id, media.medianame, medium='audio')
 
         self.assertEqual(returned_media, media)
-        self.assertFalse(media.consumed)
         self.assertEqual(media.medium, 'audio')
+        self.assertEqual(media.consumed_state, 'not started')
 
     def test_update_media_no_change(self):
         user = User('testname', 'P@ssw0rd')
         db.session.add(user)
         db.session.commit()
 
-        media = Media('testmedianame', user.id, consumed=True, medium='film')
+        media = Media('testmedianame', user.id, medium='film', consumed_state='finished')
         db.session.add(media)
         db.session.commit()
 
         returned_media = update_media(user.id, media.medianame)
 
         self.assertEqual(returned_media, media)
-        self.assertTrue(media.consumed)
         self.assertEqual(media.medium, 'film')
+        self.assertEqual(media.consumed_state, 'finished')
 
     def test_upsert_media_with_new_element(self):
         user = User('testname', 'P@ssw0rd')
@@ -120,21 +120,21 @@ class GoGoMediaMediaLogicTestCase(GoGoMediaBaseTestCase):
         self.assertIsNotNone(media)
         self.assertIn(media, db.session)
         self.assertEqual(media.medianame, 'testmedianame')
-        self.assertFalse(media.consumed)
         self.assertEqual(media.medium, 'other')
+        self.assertEqual(media.consumed_state, 'not started')
 
-    def test_upsert_media_with_new_element_consumed_property_set(self):
+    def test_upsert_media_with_new_element_consumed_state_property_set(self):
         user = User('testname', 'P@ssw0rd')
         db.session.add(user)
         db.session.commit()
 
-        media = upsert_media('testname', 'testmedianame', consumed=True)
+        media = upsert_media('testname', 'testmedianame', consumed_state='started')
 
         self.assertIsNotNone(media)
         self.assertIn(media, db.session)
         self.assertEqual(media.medianame, 'testmedianame')
-        self.assertTrue(media.consumed)
         self.assertEqual(media.medium, 'other')
+        self.assertEqual(media.consumed_state, 'started')
 
     def test_upsert_media_with_new_element_medium_property_set(self):
         user = User('testname', 'P@ssw0rd')
@@ -146,8 +146,8 @@ class GoGoMediaMediaLogicTestCase(GoGoMediaBaseTestCase):
         self.assertIsNotNone(media)
         self.assertIn(media, db.session)
         self.assertEqual(media.medianame, 'testmedianame')
-        self.assertFalse(media.consumed)
         self.assertEqual(media.medium, 'literature')
+        self.assertEqual(media.consumed_state, 'not started')
 
     def test_upsert_media_with_existing_element(self):
         user = User('testname', 'P@ssw0rd')
@@ -158,13 +158,13 @@ class GoGoMediaMediaLogicTestCase(GoGoMediaBaseTestCase):
         db.session.add(media)
         db.session.commit()
 
-        returned_media = upsert_media('testname', 'testmedianame', consumed=True)
+        returned_media = upsert_media('testname', 'testmedianame', consumed_state='finished')
 
         self.assertIsNotNone(returned_media)
         self.assertEqual(returned_media, media)
         self.assertEqual(media.medianame, 'testmedianame')
-        self.assertTrue(media.consumed)
         self.assertEqual(media.medium, 'other')
+        self.assertEqual(media.consumed_state, 'finished')
 
         media_list = Media.query.filter(Media.user == user.id).all()
 
@@ -184,8 +184,8 @@ class GoGoMediaMediaLogicTestCase(GoGoMediaBaseTestCase):
         self.assertIsNotNone(returned_media)
         self.assertEqual(returned_media, media)
         self.assertEqual(media.medianame, 'testmedianame')
-        self.assertFalse(media.consumed)
         self.assertEqual(media.medium, 'audio')
+        self.assertEqual(media.consumed_state, 'not started')
 
         media_list = Media.query.filter(Media.user == user.id).all()
 
@@ -196,7 +196,7 @@ class GoGoMediaMediaLogicTestCase(GoGoMediaBaseTestCase):
         db.session.add(user)
         db.session.commit()
 
-        media = Media('testmedianame', user.id, consumed=True, medium='audio')
+        media = Media('testmedianame', user.id, medium='audio', consumed_state='not started')
         db.session.add(media)
         db.session.commit()
 
@@ -205,8 +205,8 @@ class GoGoMediaMediaLogicTestCase(GoGoMediaBaseTestCase):
         self.assertIsNotNone(returned_media)
         self.assertEqual(returned_media, media)
         self.assertEqual(media.medianame, 'testmedianame')
-        self.assertTrue(media.consumed)
         self.assertEqual(media.medium, 'audio')
+        self.assertEqual(media.consumed_state, 'not started')
 
         media_list = Media.query.filter(Media.user == user.id).all()
 
@@ -221,7 +221,7 @@ class GoGoMediaMediaLogicTestCase(GoGoMediaBaseTestCase):
         db.session.add(media)
         db.session.commit()
 
-        self.assertTrue(media in db.session)
+        self.assertIn(media, db.session)
 
         remove_media('testname', 'testmedianame')
 
@@ -286,16 +286,16 @@ class GoGoMediaMediaLogicTestCase(GoGoMediaBaseTestCase):
 
         self.assertListEqual(user2_media_list, [media5, media4])
 
-    def test_get_media_consumed_and_unconsumed(self):
+    def test_get_media_list_filtered_by_consumed_state(self):
         user = User('testname', 'P@ssw0rd')
         db.session.add(user)
         db.session.commit()
 
-        media1 = Media('testmedianame1', user.id, consumed=True)
-        media2 = Media('testmedianame2', user.id, consumed=True)
-        media3 = Media('testmedianame3', user.id, consumed=False)
-        media4 = Media('testmedianame4', user.id, consumed=False)
-        media5 = Media('testmedianame5', user.id, consumed=True)
+        media1 = Media('testmedianame1', user.id, consumed_state='finished')
+        media2 = Media('testmedianame2', user.id, consumed_state='not started')
+        media3 = Media('testmedianame3', user.id, consumed_state='started')
+        media4 = Media('testmedianame4', user.id, consumed_state='finished')
+        media5 = Media('testmedianame5', user.id, consumed_state='started')
         db.session.add(media1)
         db.session.add(media2)
         db.session.add(media3)
@@ -303,23 +303,28 @@ class GoGoMediaMediaLogicTestCase(GoGoMediaBaseTestCase):
         db.session.add(media5)
         db.session.commit()
 
-        consumed_media_list = sorted(get_media('testname', consumed=True), key=lambda media: media.medianame)
-        unconsumed_media_list = sorted(get_media('testname', consumed=False), key=lambda media: media.medianame)
+        not_started_media_list = sorted(get_media('testname', consumed_state='not started'),
+                                        key=lambda media: media.medianame)
+        started_media_list = sorted(get_media('testname', consumed_state='started'),
+                                    key=lambda media: media.medianame)
+        finished_media_list = sorted(get_media('testname', consumed_state='finished'),
+                                     key=lambda media: media.medianame)
 
-        self.assertListEqual(consumed_media_list, [media1, media2, media5])
-        self.assertListEqual(unconsumed_media_list, [media3, media4])
+        self.assertListEqual(not_started_media_list, [media2])
+        self.assertListEqual(started_media_list, [media3, media5])
+        self.assertListEqual(finished_media_list, [media1, media4])
 
     def test_get_media_with_specific_medium(self):
         user = User('testname', 'P@ssw0rd')
         db.session.add(user)
         db.session.commit()
 
-        media1 = Media('testmedianame1', user.id, consumed=True, medium='other')
-        media2 = Media('testmedianame2', user.id, medium='film')
-        media3 = Media('testmedianame3', user.id, consumed=False, medium='literature')
-        media4 = Media('testmedianame4', user.id, consumed=False, medium='audio')
-        media5 = Media('testmedianame5', user.id, consumed=True, medium='film')
-        media6 = Media('testmedianame6', user.id, consumed=False, medium='film')
+        media1 = Media('testmedianame1', user.id, medium='other', consumed_state='not started')
+        media2 = Media('testmedianame2', user.id, medium='film', consumed_state='finished')
+        media3 = Media('testmedianame3', user.id, medium='literature')
+        media4 = Media('testmedianame4', user.id, medium='audio', consumed_state='not started')
+        media5 = Media('testmedianame5', user.id, medium='film', consumed_state='started')
+        media6 = Media('testmedianame6', user.id, medium='film', consumed_state='finished')
         media7 = Media('testmedianame7', user.id, medium='audio')
         db.session.add(media1)
         db.session.add(media2)
@@ -330,10 +335,14 @@ class GoGoMediaMediaLogicTestCase(GoGoMediaBaseTestCase):
         db.session.add(media7)
         db.session.commit()
 
-        other_media_list = sorted(get_media('testname', medium='other'), key=lambda media: media.medianame)
-        film_media_list = sorted(get_media('testname', medium='film'), key=lambda media: media.medianame)
-        audio_media_list = sorted(get_media('testname', medium='audio'), key=lambda media: media.medianame)
-        literature_media_list = sorted(get_media('testname', medium='literature'), key=lambda media: media.medianame)
+        other_media_list = sorted(get_media('testname', medium='other'),
+                                  key=lambda media: media.medianame)
+        film_media_list = sorted(get_media('testname', medium='film'),
+                                 key=lambda media: media.medianame)
+        audio_media_list = sorted(get_media('testname', medium='audio'),
+                                  key=lambda media: media.medianame)
+        literature_media_list = sorted(get_media('testname', medium='literature'),
+                                       key=lambda media: media.medianame)
 
         self.assertListEqual(other_media_list, [media1])
         self.assertListEqual(film_media_list, [media2, media5, media6])
@@ -346,9 +355,11 @@ class GoGoMediaMediaLogicTestCase(GoGoMediaBaseTestCase):
         db.session.commit()
 
         empty_media_list = get_media('testname')
-        empty_consumed_media_list = get_media('testname', consumed=True)
-        empty_unconsumed_media_list = get_media('testname', consumed=False)
+        empty_not_started_media_list = get_media('testname', consumed_state='not started')
+        empty_started_media_list = get_media('testname', consumed_state='started')
+        empty_finished_media_list = get_media('testname', consumed_state='finished')
 
-        self.assertEqual(empty_media_list, [])
-        self.assertEqual(empty_consumed_media_list, [])
-        self.assertEqual(empty_unconsumed_media_list, [])
+        self.assertListEqual(empty_media_list, [])
+        self.assertListEqual(empty_not_started_media_list, [])
+        self.assertEqual(empty_started_media_list, [])
+        self.assertEqual(empty_finished_media_list, [])

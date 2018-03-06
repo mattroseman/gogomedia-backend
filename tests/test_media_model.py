@@ -4,7 +4,7 @@ from sqlalchemy.exc import StatementError
 from database import db
 
 from models.user import User
-from models.media import Media, mediums
+from models.media import Media, mediums, consumed_states
 
 
 class GoGoMediaMediaModelTestCase(GoGoMediaBaseTestCase):
@@ -19,6 +19,17 @@ class GoGoMediaMediaModelTestCase(GoGoMediaBaseTestCase):
         self.assertEqual(str(e.exception),
                          'medium must be one of these values: {}'.format(mediums))
 
+    def test_construct_media_with_invalid_consumed_state(self):
+        user = User('testname', 'P@ssw0rd')
+        db.session.add(user)
+        db.session.commit()
+
+        with self.assertRaises(ValueError) as e:
+            media = Media('testmedianame', user.id, consumed_state='asdf')
+
+        self.assertEqual(str(e.exception),
+                         'consumed_state must be on of these values: {}'.format(consumed_states))
+
     def test_add_media(self):
         user = User('testname', 'P@ssw0rd')
         db.session.add(user)
@@ -28,22 +39,56 @@ class GoGoMediaMediaModelTestCase(GoGoMediaBaseTestCase):
         db.session.add(media)
         db.session.commit()
 
+        self.assertIn(media, db.session)
         self.assertEqual(media.medianame, 'testmedianame')
         self.assertEqual(media.user, user.id)
-        self.assertFalse(media.consumed)
         self.assertEqual(media.medium, 'other')
-        self.assertTrue(media in db.session)
+        self.assertEqual(media.consumed_state, 'not started')
 
-    def test_add_consumed_media(self):
+    def test_add_not_started_media(self):
         user = User('testname', 'P@ssw0rd')
         db.session.add(user)
         db.session.commit()
 
-        media = Media('testmedianame', user.id, consumed=True)
+        media = Media('testmedianame', user.id, consumed_state='not started')
         db.session.add(media)
         db.session.commit()
 
-        self.assertTrue(media.consumed)
+        self.assertIn(media, db.session)
+        self.assertEqual(media.medianame, 'testmedianame')
+        self.assertEqual(media.user, user.id)
+        self.assertEqual(media.medium, 'other')
+        self.assertEqual(media.consumed_state, 'not started')
+
+    def test_add_started_media(self):
+        user = User('testname', 'P@ssw0rd')
+        db.session.add(user)
+        db.session.commit()
+
+        media = Media('testmedianame', user.id, consumed_state='started')
+        db.session.add(media)
+        db.session.commit()
+
+        self.assertIn(media, db.session)
+        self.assertEqual(media.medianame, 'testmedianame')
+        self.assertEqual(media.user, user.id)
+        self.assertEqual(media.medium, 'other')
+        self.assertEqual(media.consumed_state, 'started')
+
+    def test_add_finished_media(self):
+        user = User('testname', 'P@ssw0rd')
+        db.session.add(user)
+        db.session.commit()
+
+        media = Media('testmedianame', user.id, consumed_state='finished')
+        db.session.add(media)
+        db.session.commit()
+
+        self.assertIn(media, db.session)
+        self.assertEqual(media.medianame, 'testmedianame')
+        self.assertEqual(media.user, user.id)
+        self.assertEqual(media.medium, 'other')
+        self.assertEqual(media.consumed_state, 'finished')
 
     def test_add_media_with_medium_type_film(self):
         user = User('testname', 'P@ssw0rd')
@@ -89,7 +134,7 @@ class GoGoMediaMediaModelTestCase(GoGoMediaBaseTestCase):
 
         self.assertEqual(media.medium, 'other')
 
-    def test_update_media_consumed(self):
+    def test_update_media_consumed_state(self):
         user = User('testname', 'P@ssw0rd')
         db.session.add(user)
         db.session.commit()
@@ -98,12 +143,12 @@ class GoGoMediaMediaModelTestCase(GoGoMediaBaseTestCase):
         db.session.add(media)
         db.session.commit()
 
-        self.assertFalse(media.consumed)
+        self.assertEqual(media.consumed_state, 'not started')
 
-        media.consumed = True
+        media.consumed_state = 'finished'
         db.session.commit()
 
-        self.assertTrue(media.consumed)
+        self.assertEqual(media.consumed_state, 'finished')
 
     def test_update_media_medium(self):
         user = User('testname', 'P@ssw0rd')
@@ -142,9 +187,9 @@ class GoGoMediaMediaModelTestCase(GoGoMediaBaseTestCase):
         db.session.add(user)
         db.session.commit()
 
-        media = Media('testmedianame', user.id, consumed=True, medium='literature')
+        media = Media('testmedianame', user.id, medium='literature', consumed_state='started')
         self.assertDictEqual(media.as_dict(), {
             'name': 'testmedianame',
-            'consumed': True,
-            'medium': 'literature'
+            'medium': 'literature',
+            'consumed_state': 'started'
         })
