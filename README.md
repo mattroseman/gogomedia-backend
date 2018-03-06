@@ -96,14 +96,17 @@ Response Format:
     ```
     {
     	'name': 'medianame',
-     	'consumed': true/false (optional),
-        'medium': 'other'/'film'/'audio'/'literature' (optional)
+        'medium': 'other'/'film'/'audio'/'literature' (optional),
+        'consumed_state': 'not started'/'started'/'finished' (optional)
     }
     ```
     
     Response Messages:
     
     - 422: 'missing parameter \'name\''
+    - 422: 'parameter \'name\' must be type string'
+    - 422: 'medium parameter must be \'film\', \'audio\', \'literature\', or \'other\''
+    - 422: 'consumed_state parameter must be \'not started\', \'started\', or \'finished\''
     - 422: 'user doesn\'t exist'
     - 401: 'not logged in as this user'
     - 200: 'successfully added/updated media element'
@@ -116,11 +119,12 @@ Response Format:
     - 401: 'not logged in as this user'
     - 200: 'successfully got media for the logged in user'
 
-- **/user/\<username>/media?consumed=yes/no [GET] (login required)** get all consumed or unconsumed media elements for this user
+- **/user/\<username>/media?consumed-state=not-started/started/finished [GET] (login required)** get all consumed or unconsumed media elements for this user
 
 	Response Messages:
     
     - 422: 'user doesn\'t exist'
+    - 422: 'consumed-state url parameter must be \'not-started\', \'started\', or \'finished\''
     - 401: 'not logged in as this user'
     - 422: 'consumed url parameter must be \'yes\' or \'no\''
     - 200: 'successfully got media for the logged in user'
@@ -130,6 +134,7 @@ Response Format:
 	Response Messages:
     
     - 422: 'user doesn\'t exist'
+    - 422: 'medium url parameter must be \'film\', \'audio\', \'literature\', or \'other\''
     - 401: 'not logged in as this user'
     - 422: 'medium url parameter must be \'film\', \'audio\', \'literature\', or \'other\''
     - 200: 'successfully got media for the logged in user'
