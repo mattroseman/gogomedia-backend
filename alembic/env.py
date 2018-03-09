@@ -1,4 +1,5 @@
 from __future__ import with_statement
+import os
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 from logging.config import fileConfig
@@ -35,7 +36,10 @@ def run_migrations_offline():
     script output.
 
     """
-    url = config.get_main_option("sqlalchemy.url")
+    if os.environ.get('DATABASE_URL') is None:
+        url = config.get_main_option("sqlalchemy.url")
+    else:
+        url = os.eniron.get('DATABASE_URL')
     context.configure(
         url=url, target_metadata=target_metadata, literal_binds=True)
 
@@ -63,6 +67,7 @@ def run_migrations_online():
 
         with context.begin_transaction():
             context.run_migrations()
+
 
 if context.is_offline_mode():
     run_migrations_offline()
