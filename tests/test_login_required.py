@@ -57,6 +57,7 @@ class GoGoMediaLoginRequiredTestCase(GoGoMediaBaseTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTrue(body['success'])
         self.assertEqual(body['data'], {
+            'id': 1,
             'name': 'testmedianame',
             'medium': 'other',
             'consumed_state': 'not started'

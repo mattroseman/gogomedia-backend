@@ -2,7 +2,7 @@ from flask import request, jsonify, current_app
 
 from models.media import mediums, consumed_states
 
-from logic.media import get_media, upsert_media, remove_media
+from logic.media import get_media, add_media, update_media, remove_media, get_media_by_id
 from logic.user import get_user
 from logic.login import login_required
 
@@ -16,6 +16,7 @@ def media(logged_in_user, username):
     """
     media accepts a PUT request with formdata that matches
         {
+            'id': a number representing the id of an existing media element to update
             'name': a string representing the name of the media to insert/update
             'medium': a string indicating the type of this media
                 represents an Enum of possible values ('film', 'audio', 'literature', 'other')
@@ -32,7 +33,7 @@ def media(logged_in_user, username):
 
     media accepts a DELETE request with formdata that matches
         {
-            'name': a string representing the name of the media to delete
+            'id': a number representing the id of the media to delete
         }
     """
     body = request.get_json()
@@ -66,7 +67,9 @@ def media(logged_in_user, username):
         if validation_result is not None:
             return validation_result
 
-        medianame = body['name']
+        medianame = None
+        if 'name' in body:
+            medianame = body['name']
 
         medium = None
         if 'medium' in body:
@@ -76,7 +79,20 @@ def media(logged_in_user, username):
         if 'consumed_state' in body:
             consumed_state = body['consumed_state']
 
-        media = upsert_media(username, medianame, medium, consumed_state)
+        if 'id' in body:
+            media = get_media_by_id(body['id'])
+            if media is None or media.user != user.id:
+                # If there is no media with this id, or it belongs to another user
+                return jsonify({
+                    'success': False,
+                    'message': 'logged in user doesn\'t have media with given id'
+                }), 401
+
+            media = update_media(body['id'], medianame, medium, consumed_state)
+        else:
+            media = add_media(user.id, medianame,
+                              medium if medium is not None else 'other',
+                              consumed_state if consumed_state is not None else 'not started')
 
         return jsonify({
             'success': True,
@@ -88,9 +104,7 @@ def media(logged_in_user, username):
         if validation_result is not None:
             return validation_result
 
-        medianame = body['name']
-
-        media = remove_media(username, medianame)
+        media = remove_media(body['id'])
         return jsonify({
             'success': True,
             'message': 'successfully deleted media element'
@@ -143,17 +157,25 @@ def validate_put_body_parameters(body):
     validate_put_body_parameters checks the body JSON, and makes sure the parameters are the correct type
     @return: None if there is no issue, otherwise a JSON response with a detailed message on what was wrong
     """
-    if 'name' not in body:
-        # return malformed parameters response if 'name' isn't present
+    if 'id' not in body and 'name' not in body:
+        # If id isn't in body, then this must be a new media element, and name is required
         return jsonify({
             'success': False,
-            'message': 'missing parameter \'name\''
+            'message': 'missing parameter \'name\' or parameter \'id\''
         }), 422
-    elif not isinstance(body['name'], str):
-        # return malformed parameters response if 'name' isn't of type string
+
+    if 'id' in body and not isinstance(body['id'], int):
+        # return malformed parameters response if 'id' is not of type integer
         return jsonify({
             'success': False,
-            'message': 'parameter \'name\' must be type string'
+            'message': 'id parameter must be type integer'
+        }), 422
+
+    if 'name' in body and not isinstance(body['name'], str):
+        # return malformed parameters response if 'name' is not of type string
+        return jsonify({
+            'success': False,
+            'message': 'name parameter must be type string'
         }), 422
 
     if 'medium' in body and body['medium'] not in mediums:
@@ -176,15 +198,15 @@ def validate_delete_body_parameters(body):
     validate_delete_body_parameters checks the body JSON, and makes sure the parameters are the correct type
     @return: None if there is no issue, otherwise a JSON response with a detailed message on what was wrong
     """
-    if 'name' not in body:
-        # return malformed parameters response if 'name' isn't present
+    if 'id' not in body:
+        # return malformed parameters response if 'id' isn't present
         return jsonify({
             'success': False,
-            'message': 'missing parameter \'name\''
+            'message': 'missing parameter \'id\''
         }), 422
-    elif not isinstance(body['name'], str):
-        # return malformed parameters response if 'name' ins't of type string
+    elif not isinstance(body['id'], int):
+        # return malformed parameters response if 'id' isn't of type integer
         return jsonify({
             'success': False,
-            'message': 'parameter \'name\' must be type string'
+            'message': 'parameter \'id\' must be type integer'
         }), 422

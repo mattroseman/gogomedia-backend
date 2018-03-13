@@ -4,25 +4,6 @@ from models.media import Media
 from models.user import User
 
 
-def upsert_media(username, medianame, medium=None, consumed_state=None):
-    """
-    upsert_media determines if a record with the given data already exists, and if so updates it,
-    otherwise it inserts it as a new record
-    """
-    userid = User.query.filter_by(username=username).first().id
-
-    # check if this media has been added for this user already
-    if Media.query.filter((Media.medianame == medianame) & (Media.user == userid)).first():
-        return update_media(userid, medianame, medium, consumed_state)
-    else:
-        # If consumed wasn't specified, use False
-        # If medium wasn't specified, use 'other'
-        return add_media(userid,
-                         medianame,
-                         medium if medium is not None else 'other',
-                         consumed_state if consumed_state is not None else 'not started')
-
-
 def add_media(userid, medianame, medium='other', consumed_state='not started'):
     """
     add_media creates a new media record with the given medianame and assigns the media to the user with the given
@@ -35,13 +16,17 @@ def add_media(userid, medianame, medium='other', consumed_state='not started'):
     return media
 
 
-def update_media(userid, medianame, medium=None, consumed_state=None):
+def update_media(id, medianame=None, medium=None, consumed_state=None):
     """
-    upadte_media updates an existing media record with he given medianame with the given values
+    upadte_media updates an existing media record with the given id
+    @param medianame: If this parameter is missing or set to None, no change is made to the medianame property
     @param medium: If this parameter is missing or set to None, no change is made to the medium property
     @param consumed_state: If this parameter is missing or set to None, no change is made to the consumed_state property
     """
-    media = Media.query.filter((Media.medianame == medianame) & (Media.user == userid)).first()
+    media = Media.query.filter_by(id=id).first()
+
+    if medianame is not None:
+        media.medianame = medianame
     if consumed_state is not None:
         media.consumed_state = consumed_state
     if medium is not None:
@@ -51,13 +36,12 @@ def update_media(userid, medianame, medium=None, consumed_state=None):
     return media
 
 
-def remove_media(username, medianame):
+def remove_media(id):
     """
     remove_media removes a Media record from the database
     """
-    userid = User.query.filter_by(username=username).first().id
     # if there is no record for this medianame for this user, then filter returns nothing, and nothing is deleted
-    Media.query.filter((Media.medianame == medianame) & (Media.user == userid)).delete()
+    Media.query.filter_by(id=id).delete()
     db.session.commit()
 
 
@@ -79,3 +63,10 @@ def get_media(username, medium=None, consumed_state=None):
         media_list = [media for media in media_list if media.consumed_state == consumed_state]
 
     return media_list
+
+
+def get_media_by_id(id):
+    """
+    get_media_by_id returns a single media object with the given id, or None if there is no media with the given id
+    """
+    return Media.query.filter_by(id=id).first()

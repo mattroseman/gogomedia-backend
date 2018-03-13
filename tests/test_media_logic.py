@@ -5,7 +5,7 @@ from database import db
 from models.user import User
 from models.media import Media
 
-from logic.media import add_media, update_media, upsert_media, get_media, remove_media
+from logic.media import add_media, update_media, remove_media, get_media, get_media_by_id
 
 
 class GoGoMediaMediaLogicTestCase(GoGoMediaBaseTestCase):
@@ -18,6 +18,8 @@ class GoGoMediaMediaLogicTestCase(GoGoMediaBaseTestCase):
 
         self.assertIsNotNone(media)
         self.assertIn(media, db.session)
+        self.assertEqual(media.id, 1)
+        self.assertEqual(media.user, 1)
         self.assertEqual(media.medianame, 'testmedianame')
         self.assertEqual(media.medium, 'other')
         self.assertEqual(media.consumed_state, 'not started')
@@ -60,13 +62,13 @@ class GoGoMediaMediaLogicTestCase(GoGoMediaBaseTestCase):
         self.assertEqual(media.consumed_state, 'not started')
         self.assertEqual(media.medium, 'other')
 
-        returned_media = update_media(user.id, media.medianame, consumed_state='started')
+        returned_media = update_media(media.id, consumed_state='started')
 
         self.assertEqual(returned_media, media)
         self.assertEqual(media.medium, 'other')
         self.assertEqual(media.consumed_state, 'started')
 
-        returned_media = update_media(user.id, media.medianame, consumed_state='finished')
+        returned_media = update_media(media.id, consumed_state='finished')
 
         self.assertEqual(returned_media, media)
         self.assertEqual(media.medium, 'other')
@@ -83,16 +85,34 @@ class GoGoMediaMediaLogicTestCase(GoGoMediaBaseTestCase):
 
         self.assertEqual(media.medium, 'other')
 
-        returned_media = update_media(user.id, media.medianame, medium='film')
+        returned_media = update_media(media.id, medium='film')
 
         self.assertEqual(returned_media, media)
         self.assertEqual(media.medium, 'film')
         self.assertEqual(media.consumed_state, 'not started')
 
-        returned_media = update_media(user.id, media.medianame, medium='audio')
+        returned_media = update_media(media.id, medium='audio')
 
         self.assertEqual(returned_media, media)
         self.assertEqual(media.medium, 'audio')
+        self.assertEqual(media.consumed_state, 'not started')
+
+    def test_update_media_medianame_property(self):
+        user = User('testname', 'P@ssw0rd')
+        db.session.add(user)
+        db.session.commit()
+
+        media = Media('testmedianame', user.id)
+        db.session.add(media)
+        db.session.commit()
+
+        self.assertEqual(media.medianame, 'testmedianame')
+
+        returned_media = update_media(media.id, medianame='testchangedmedianame')
+
+        self.assertEqual(returned_media, media)
+        self.assertEqual(media.medianame, 'testchangedmedianame')
+        self.assertEqual(media.medium, 'other')
         self.assertEqual(media.consumed_state, 'not started')
 
     def test_update_media_no_change(self):
@@ -104,113 +124,12 @@ class GoGoMediaMediaLogicTestCase(GoGoMediaBaseTestCase):
         db.session.add(media)
         db.session.commit()
 
-        returned_media = update_media(user.id, media.medianame)
+        returned_media = update_media(media.id)
 
         self.assertEqual(returned_media, media)
+        self.assertEqual(media.medianame, 'testmedianame')
         self.assertEqual(media.medium, 'film')
         self.assertEqual(media.consumed_state, 'finished')
-
-    def test_upsert_media_with_new_element(self):
-        user = User('testname', 'P@ssw0rd')
-        db.session.add(user)
-        db.session.commit()
-
-        media = upsert_media('testname', 'testmedianame')
-
-        self.assertIsNotNone(media)
-        self.assertIn(media, db.session)
-        self.assertEqual(media.medianame, 'testmedianame')
-        self.assertEqual(media.medium, 'other')
-        self.assertEqual(media.consumed_state, 'not started')
-
-    def test_upsert_media_with_new_element_consumed_state_property_set(self):
-        user = User('testname', 'P@ssw0rd')
-        db.session.add(user)
-        db.session.commit()
-
-        media = upsert_media('testname', 'testmedianame', consumed_state='started')
-
-        self.assertIsNotNone(media)
-        self.assertIn(media, db.session)
-        self.assertEqual(media.medianame, 'testmedianame')
-        self.assertEqual(media.medium, 'other')
-        self.assertEqual(media.consumed_state, 'started')
-
-    def test_upsert_media_with_new_element_medium_property_set(self):
-        user = User('testname', 'P@ssw0rd')
-        db.session.add(user)
-        db.session.commit()
-
-        media = upsert_media('testname', 'testmedianame', medium='literature')
-
-        self.assertIsNotNone(media)
-        self.assertIn(media, db.session)
-        self.assertEqual(media.medianame, 'testmedianame')
-        self.assertEqual(media.medium, 'literature')
-        self.assertEqual(media.consumed_state, 'not started')
-
-    def test_upsert_media_with_existing_element(self):
-        user = User('testname', 'P@ssw0rd')
-        db.session.add(user)
-        db.session.commit()
-
-        media = Media('testmedianame', user.id)
-        db.session.add(media)
-        db.session.commit()
-
-        returned_media = upsert_media('testname', 'testmedianame', consumed_state='finished')
-
-        self.assertIsNotNone(returned_media)
-        self.assertEqual(returned_media, media)
-        self.assertEqual(media.medianame, 'testmedianame')
-        self.assertEqual(media.medium, 'other')
-        self.assertEqual(media.consumed_state, 'finished')
-
-        media_list = Media.query.filter(Media.user == user.id).all()
-
-        self.assertListEqual(media_list, [media])
-
-    def test_upsert_media_with_existing_element_update_medium(self):
-        user = User('testname', 'P@ssw0rd')
-        db.session.add(user)
-        db.session.commit()
-
-        media = Media('testmedianame', user.id, medium='film')
-        db.session.add(media)
-        db.session.commit()
-
-        returned_media = upsert_media('testname', 'testmedianame', medium='audio')
-
-        self.assertIsNotNone(returned_media)
-        self.assertEqual(returned_media, media)
-        self.assertEqual(media.medianame, 'testmedianame')
-        self.assertEqual(media.medium, 'audio')
-        self.assertEqual(media.consumed_state, 'not started')
-
-        media_list = Media.query.filter(Media.user == user.id).all()
-
-        self.assertListEqual(media_list, [media])
-
-    def test_upsert_media_with_existing_element_no_change(self):
-        user = User('testname', 'P@ssw0rd')
-        db.session.add(user)
-        db.session.commit()
-
-        media = Media('testmedianame', user.id, medium='audio', consumed_state='not started')
-        db.session.add(media)
-        db.session.commit()
-
-        returned_media = upsert_media('testname', 'testmedianame')
-
-        self.assertIsNotNone(returned_media)
-        self.assertEqual(returned_media, media)
-        self.assertEqual(media.medianame, 'testmedianame')
-        self.assertEqual(media.medium, 'audio')
-        self.assertEqual(media.consumed_state, 'not started')
-
-        media_list = Media.query.filter(Media.user == user.id).all()
-
-        self.assertListEqual(media_list, [media])
 
     def test_remove_media(self):
         user = User('testname', 'P@ssw0rd')
@@ -223,7 +142,7 @@ class GoGoMediaMediaLogicTestCase(GoGoMediaBaseTestCase):
 
         self.assertIn(media, db.session)
 
-        remove_media('testname', 'testmedianame')
+        remove_media(media.id)
 
         self.assertFalse(media in db.session)
 
@@ -363,3 +282,18 @@ class GoGoMediaMediaLogicTestCase(GoGoMediaBaseTestCase):
         self.assertListEqual(empty_not_started_media_list, [])
         self.assertEqual(empty_started_media_list, [])
         self.assertEqual(empty_finished_media_list, [])
+
+    def test_get_media_by_id(self):
+        user = User('testname', 'P@ssw0rd')
+        db.session.add(user)
+        db.session.commit()
+
+        media = Media('testmedianame', user.id)
+        db.session.add(media)
+        db.session.commit()
+
+        returned_media = get_media_by_id(media.id)
+
+        self.assertEqual(returned_media, media)
+        self.assertEqual(returned_media.id, media.id)
+        self.assertEqual(returned_media.medianame, media.medianame)

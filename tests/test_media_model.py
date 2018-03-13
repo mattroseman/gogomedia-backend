@@ -188,7 +188,11 @@ class GoGoMediaMediaModelTestCase(GoGoMediaBaseTestCase):
         db.session.commit()
 
         media = Media('testmedianame', user.id, medium='literature', consumed_state='started')
+        db.session.add(media)
+        db.session.commit()
+
         self.assertDictEqual(media.as_dict(), {
+            'id': 1,
             'name': 'testmedianame',
             'medium': 'literature',
             'consumed_state': 'started'

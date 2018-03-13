@@ -35,6 +35,7 @@ class Media(db.Model):
         returns a dict representing this media element. Used when returning media data as json in response
         """
         return {
+            'id': self.id,
             'name': self.medianame,
             'medium': self.medium,
             'consumed_state': self.consumed_state
