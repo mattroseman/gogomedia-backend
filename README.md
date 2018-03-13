@@ -36,23 +36,23 @@ Response Format:
 
 ```
 {
-	'success': True/False,
+    'success': True/False,
     'message': A string detailing what wen't wrong/right on the server,
     'data': Some JSON representing relevant data to the request,
     'auth_token': JWT authentication token returned from login endpoint
-    	Put the JWT authentication in headers of requests to endpoints
+        Put the JWT authentication in headers of requests to endpoints
         that require login
 }
 ```
 
 - **/register [POST]** adds a new user
-	
+    
     Request Body:
     
     ```
     {
-    	'username': 'JohnSmith'
-    	'password': 'pass123'
+        'username': 'JohnSmith'
+        'password': 'pass123'
     }
     ```
     
@@ -70,8 +70,8 @@ Response Format:
 
   ```
   {
-  	'username': 'JohnSmith'
-  	'password': 'pass123'
+    'username': 'JohnSmith'
+    'password': 'pass123'
   }
   ```
 
@@ -91,11 +91,12 @@ Response Format:
                                                                                                              
 - **/user/\<username>/media [PUT] (login required)** add/update a media element for this user
 
-	Request Body:
-	
+    Request Body:
+    
     ```
     {
-    	'name': 'medianame',
+        'id': unique number
+        'name': 'medianame',
         'medium': 'other'/'film'/'audio'/'literature' (optional),
         'consumed_state': 'not started'/'started'/'finished' (optional)
     }
@@ -103,17 +104,19 @@ Response Format:
     
     Response Messages:
     
-    - 422: 'missing parameter \'name\''
-    - 422: 'parameter \'name\' must be type string'
+    - 422: 'missing parameter \'name\' or parameter \'id\''
+    - 422: 'id parameter must be type integer'
+    - 422: 'name parameter must be type string'
     - 422: 'medium parameter must be \'film\', \'audio\', \'literature\', or \'other\''
     - 422: 'consumed_state parameter must be \'not started\', \'started\', or \'finished\''
     - 422: 'user doesn\'t exist'
     - 401: 'not logged in as this user'
+    - 401: 'logged in user doesn\'t have media with given id'
     - 200: 'successfully added/updated media element'
     
 - **/user/\<username>/media [GET] (login required)** get all media elements for this user
 
-	Response Messages:
+    Response Messages:
     
     - 422: 'user doesn\'t exist'
     - 401: 'not logged in as this user'
@@ -121,7 +124,7 @@ Response Format:
 
 - **/user/\<username>/media?consumed-state=not-started/started/finished [GET] (login required)** get all consumed or unconsumed media elements for this user
 
-	Response Messages:
+    Response Messages:
     
     - 422: 'user doesn\'t exist'
     - 422: 'consumed-state url parameter must be \'not-started\', \'started\', or \'finished\''
@@ -131,7 +134,7 @@ Response Format:
 
 - **/user/\<username>/media?medium=other/film/audio/literature [GET] (login required)** get all media elements for this user of a specified medium type
 
-	Response Messages:
+    Response Messages:
     
     - 422: 'user doesn\'t exist'
     - 422: 'medium url parameter must be \'film\', \'audio\', \'literature\', or \'other\''
@@ -141,11 +144,11 @@ Response Format:
 
 - **/user/\<username>/media [DELETE] (login required)** delete a media element for this user
 
-	Request Body:
+    Request Body:
     
     ```
     {
-    	'name': 'medianame'
+        'id': unique number
     }
     ```
     
@@ -153,16 +156,17 @@ Response Format:
     
     - 422: 'user doesn\'t exist'
     - 401: 'not logged in as this user'
-    - 422: 'missing parameter \'name\''
+    - 422: 'missing parameter \'id\''
+    - 422: 'id parameter must be type integer'
     - 200: 'successfully deleted media element'
 
 - **all login required endpoints**
 
-	Request Headers:
+    Request Headers:
     
     ```
     {
-    	'Authorization': 'JWT <auth token>'
+        'Authorization': 'JWT <auth token>'
     }
     ```
     

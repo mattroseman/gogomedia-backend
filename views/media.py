@@ -208,5 +208,5 @@ def validate_delete_body_parameters(body):
         # return malformed parameters response if 'id' isn't of type integer
         return jsonify({
             'success': False,
-            'message': 'parameter \'id\' must be type integer'
+            'message': 'id parameter must be type integer'
         }), 422

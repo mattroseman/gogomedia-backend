@@ -606,7 +606,7 @@ class GoGoMediaMediaViewsTestCase(GoGoMediaBaseTestCase):
 
         self.assertEqual(response.status_code, 422)
         self.assertFalse(body['success'])
-        self.assertEqual(body['message'], 'parameter \'id\' must be type integer')
+        self.assertEqual(body['message'], 'id parameter must be type integer')
 
     def test_delete_unexisting_media(self):
         user = User('testname', 'P@ssw0rd')
