@@ -9,8 +9,9 @@ consumed_state_type = db.Enum(*consumed_states, name='consumed_state_type', vali
 
 class Media(db.Model):
     __tablename__ = 'media'
-    medianame = db.Column('medianame', db.String(80), primary_key=True)
-    user = db.Column('user', db.Integer, db.ForeignKey('users.id'), primary_key=True)
+    id = db.Column('id', db.Integer, primary_key=True)
+    medianame = db.Column('medianame', db.String(80))
+    user = db.Column('user', db.Integer, db.ForeignKey('users.id'))
     medium = db.Column('medium', medium_type, default='other')
     consumed_state = db.Column('consumed_state', consumed_state_type, default='not started')
 
@@ -26,7 +27,7 @@ class Media(db.Model):
         self.consumed_state = consumed_state
 
     def __repr__(self):
-        return '<Media(medianame={}, user={}, medium={}, consumed_state={})>'.format(
+        return '<Media(id={}, medianame={}, user={}, medium={}, consumed_state={})>'.format(
             self.medianame, self.user, self.medium, self.consumed_state)
 
     def as_dict(self):
