@@ -97,7 +97,8 @@ Response Format:
         'id': unique number
         'name': 'medianame',
         'medium': 'other'/'film'/'audio'/'literature' (optional),
-        'consumed_state': 'not started'/'started'/'finished' (optional)
+        'consumed_state': 'not started'/'started'/'finished' (optional),
+        'description': 'any string <= 500 characters' (optional)
     }
     ```
     
@@ -109,6 +110,7 @@ Response Format:
     - 422: 'medium parameter must be \'film\', \'audio\', \'literature\', or \'other\''
     - 422: 'consumed_state parameter must be \'not started\', \'started\', or \'finished\''
     - 422: 'user doesn\'t exist'
+    - 422: 'description parameter must be type string'
     - 401: 'not logged in as this user'
     - 401: 'logged in user doesn\'t have media with given id'
     - 200: 'successfully added/updated media element'

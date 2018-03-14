@@ -23,6 +23,7 @@ class GoGoMediaMediaLogicTestCase(GoGoMediaBaseTestCase):
         self.assertEqual(media.medianame, 'testmedianame')
         self.assertEqual(media.medium, 'other')
         self.assertEqual(media.consumed_state, 'not started')
+        self.assertEqual(media.description, '')
 
     def test_add_media_with_consumed_state_argument(self):
         user = User('testname', 'P@ssw0rd')
@@ -49,6 +50,20 @@ class GoGoMediaMediaLogicTestCase(GoGoMediaBaseTestCase):
         self.assertEqual(media.medianame, 'testmedianame')
         self.assertEqual(media.medium, 'audio')
         self.assertEqual(media.consumed_state, 'not started')
+
+    def test_add_media_with_description_argument(self):
+        user = User('testname', 'P@ssw0rd')
+        db.session.add(user)
+        db.session.commit()
+
+        media = add_media(user.id, 'testmedianame', description='some description')
+
+        self.assertIsNotNone(media)
+        self.assertIn(media, db.session)
+        self.assertEqual(media.medianame, 'testmedianame')
+        self.assertEqual(media.medium, 'other')
+        self.assertEqual(media.consumed_state, 'not started')
+        self.assertEqual(media.description, 'some description')
 
     def test_update_media_consumed_state_property(self):
         user = User('testname', 'P@ssw0rd')
@@ -115,12 +130,31 @@ class GoGoMediaMediaLogicTestCase(GoGoMediaBaseTestCase):
         self.assertEqual(media.medium, 'other')
         self.assertEqual(media.consumed_state, 'not started')
 
+    def test_update_media_description_property(self):
+        user = User('testname', 'P@ssw0rd')
+        db.session.add(user)
+        db.session.commit()
+
+        media = Media('testmedianame', user.id)
+        db.session.add(media)
+        db.session.commit()
+
+        self.assertEqual(media.description, '')
+
+        returned_media = update_media(media.id, description='some description')
+
+        self.assertEqual(returned_media, media)
+        self.assertEqual(media.medianame, 'testmedianame')
+        self.assertEqual(media.medium, 'other')
+        self.assertEqual(media.consumed_state, 'not started')
+        self.assertEqual(media.description, 'some description')
+
     def test_update_media_no_change(self):
         user = User('testname', 'P@ssw0rd')
         db.session.add(user)
         db.session.commit()
 
-        media = Media('testmedianame', user.id, medium='film', consumed_state='finished')
+        media = Media('testmedianame', user.id, medium='film', consumed_state='finished', description='some description')
         db.session.add(media)
         db.session.commit()
 
@@ -130,6 +164,7 @@ class GoGoMediaMediaLogicTestCase(GoGoMediaBaseTestCase):
         self.assertEqual(media.medianame, 'testmedianame')
         self.assertEqual(media.medium, 'film')
         self.assertEqual(media.consumed_state, 'finished')
+        self.assertEqual(media.description, 'some description')
 
     def test_remove_media(self):
         user = User('testname', 'P@ssw0rd')

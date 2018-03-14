@@ -4,19 +4,19 @@ from models.media import Media
 from models.user import User
 
 
-def add_media(userid, medianame, medium='other', consumed_state='not started'):
+def add_media(userid, medianame, medium='other', consumed_state='not started', description=''):
     """
     add_media creates a new media record with the given medianame and assigns the media to the user with the given
     username
     """
-    media = Media(medianame, userid, medium, consumed_state)
+    media = Media(medianame, userid, medium, consumed_state, description)
     db.session.add(media)
     db.session.commit()
 
     return media
 
 
-def update_media(id, medianame=None, medium=None, consumed_state=None):
+def update_media(id, medianame=None, medium=None, consumed_state=None, description=None):
     """
     upadte_media updates an existing media record with the given id
     @param medianame: If this parameter is missing or set to None, no change is made to the medianame property
@@ -31,6 +31,8 @@ def update_media(id, medianame=None, medium=None, consumed_state=None):
         media.consumed_state = consumed_state
     if medium is not None:
         media.medium = medium
+    if description is not None:
+        media.description = description
     db.session.commit()
 
     return media

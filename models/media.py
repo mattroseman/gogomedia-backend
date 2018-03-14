@@ -14,8 +14,9 @@ class Media(db.Model):
     user = db.Column('user', db.Integer, db.ForeignKey('users.id'))
     medium = db.Column('medium', medium_type, default='other')
     consumed_state = db.Column('consumed_state', consumed_state_type, default='not started')
+    description = db.Column('description', db.String(500))
 
-    def __init__(self, medianame, userid, medium='other', consumed_state='not started'):
+    def __init__(self, medianame, userid, medium='other', consumed_state='not started', description=''):
         if medium not in mediums:
             raise ValueError('medium must be one of these values: {}'.format(mediums))
         if consumed_state not in consumed_states:
@@ -25,6 +26,7 @@ class Media(db.Model):
         self.user = userid
         self.medium = medium
         self.consumed_state = consumed_state
+        self.description = description
 
     def __repr__(self):
         return '<Media(id={}, medianame={}, user={}, medium={}, consumed_state={})>'.format(
@@ -38,5 +40,6 @@ class Media(db.Model):
             'id': self.id,
             'name': self.medianame,
             'medium': self.medium,
-            'consumed_state': self.consumed_state
+            'consumed_state': self.consumed_state,
+            'description': self.description
         }

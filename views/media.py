@@ -22,6 +22,7 @@ def media(logged_in_user, username):
                 represents an Enum of possible values ('film', 'audio', 'literature', 'other')
             'consumed_state': a string indicating the current consumed state of this media
                 represents an Enum of possible values ('not started', 'started', 'finished')
+            'description': a string indicating some details about this media type (maximum 500 characters)
         }
 
     media accepts a GET request and returns all the media associated with the user specified by username
@@ -79,6 +80,10 @@ def media(logged_in_user, username):
         if 'consumed_state' in body:
             consumed_state = body['consumed_state']
 
+        description = None
+        if 'description' in body:
+            description = body['description']
+
         if 'id' in body:
             media = get_media_by_id(body['id'])
             if media is None or media.user != user.id:
@@ -88,11 +93,12 @@ def media(logged_in_user, username):
                     'message': 'logged in user doesn\'t have media with given id'
                 }), 401
 
-            media = update_media(body['id'], medianame, medium, consumed_state)
+            media = update_media(body['id'], medianame, medium, consumed_state, description)
         else:
             media = add_media(user.id, medianame,
                               medium if medium is not None else 'other',
-                              consumed_state if consumed_state is not None else 'not started')
+                              consumed_state if consumed_state is not None else 'not started',
+                              description if description is not None else '')
 
         return jsonify({
             'success': True,
@@ -190,6 +196,13 @@ def validate_put_body_parameters(body):
         return jsonify({
             'success': False,
             'message': 'consumed_state parameter must be \'not started\', \'started\', or \'finished\''
+        }), 422
+
+    if 'description' in body and not isinstance(body['description'], str):
+        # return malformed parameters response if 'description' isn't of type string
+        return jsonify({
+            'success': False,
+            'message': 'description parameter must be type string'
         }), 422
 
 

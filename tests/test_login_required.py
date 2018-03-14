@@ -60,7 +60,8 @@ class GoGoMediaLoginRequiredTestCase(GoGoMediaBaseTestCase):
             'id': 1,
             'name': 'testmedianame',
             'medium': 'other',
-            'consumed_state': 'not started'
+            'consumed_state': 'not started',
+            'description': ''
         })
 
     def test_login_required_media_endpoint_malformed_authorization_header(self):

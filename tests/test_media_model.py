@@ -44,6 +44,7 @@ class GoGoMediaMediaModelTestCase(GoGoMediaBaseTestCase):
         self.assertEqual(media.user, user.id)
         self.assertEqual(media.medium, 'other')
         self.assertEqual(media.consumed_state, 'not started')
+        self.assertEqual(media.description, '')
 
     def test_add_not_started_media(self):
         user = User('testname', 'P@ssw0rd')
@@ -134,6 +135,17 @@ class GoGoMediaMediaModelTestCase(GoGoMediaBaseTestCase):
 
         self.assertEqual(media.medium, 'other')
 
+    def test_add_media_with_description(self):
+        user = User('testname', 'P@ssw0rd')
+        db.session.add(user)
+        db.session.commit()
+
+        media = Media('testmedianame', user.id, description='some description')
+        db.session.add(media)
+        db.session.commit()
+
+        self.assertEqual(media.description, 'some description')
+
     def test_update_media_consumed_state(self):
         user = User('testname', 'P@ssw0rd')
         db.session.add(user)
@@ -166,6 +178,22 @@ class GoGoMediaMediaModelTestCase(GoGoMediaBaseTestCase):
 
         self.assertEqual(media.medium, 'audio')
 
+    def test_update_media_description(self):
+        user = User('testname', 'P@ssw0rd')
+        db.session.add(user)
+        db.session.commit()
+
+        media = Media('testmedianame', user.id, description='asdf')
+        db.session.add(media)
+        db.session.commit()
+
+        self.assertEqual(media.description, 'asdf')
+
+        media.description = 'some description'
+        db.session.commit()
+
+        self.assertEqual(media.description, 'some description')
+
     def test_remove_media(self):
         user = User('testname', 'P@ssw0rd')
         db.session.add(user)
@@ -187,7 +215,11 @@ class GoGoMediaMediaModelTestCase(GoGoMediaBaseTestCase):
         db.session.add(user)
         db.session.commit()
 
-        media = Media('testmedianame', user.id, medium='literature', consumed_state='started')
+        media = Media('testmedianame',
+                      user.id,
+                      medium='literature',
+                      consumed_state='started',
+                      description='some description')
         db.session.add(media)
         db.session.commit()
 
@@ -195,5 +227,6 @@ class GoGoMediaMediaModelTestCase(GoGoMediaBaseTestCase):
             'id': 1,
             'name': 'testmedianame',
             'medium': 'literature',
-            'consumed_state': 'started'
+            'consumed_state': 'started',
+            'description': 'some description'
         })

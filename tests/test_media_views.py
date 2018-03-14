@@ -38,7 +38,8 @@ class GoGoMediaMediaViewsTestCase(GoGoMediaBaseTestCase):
             'id': 1,
             'name': 'testmedianame',
             'medium': 'other',
-            'consumed_state': 'not started'
+            'consumed_state': 'not started',
+            'description': ''
         })
 
         media = Media.query.filter_by(id=1).first()
@@ -48,6 +49,7 @@ class GoGoMediaMediaViewsTestCase(GoGoMediaBaseTestCase):
         self.assertEqual(media.user, user.id)
         self.assertEqual(media.medium, 'other')
         self.assertEqual(media.consumed_state, 'not started')
+        self.assertEqual(media.description, '')
 
     def test_add_media_missing_request_name_and_id_params(self):
         user = User('testname', 'P@ssw0rd')
@@ -141,6 +143,20 @@ class GoGoMediaMediaViewsTestCase(GoGoMediaBaseTestCase):
         self.assertEqual(body['message'],
                          'medium parameter must be \'film\', \'audio\', \'literature\', or \'other\'')
 
+    def test_add_media_mistyped_request_description_param(self):
+        user = User('testname', 'P@ssw0rd')
+        db.session.add(user)
+        db.session.commit()
+
+        response = self.client.put('/user/testname/media',
+                                   data=json.dumps({'name': 'testmedianame', 'description': 34}),
+                                   content_type='application/json')
+        body = json.loads(response.get_data(as_text=True))
+
+        self.assertEqual(response.status_code, 422)
+        self.assertFalse(body['success'])
+        self.assertEqual(body['message'], 'description parameter must be type string')
+
     def test_add_media_not_started(self):
         user = User('testname', 'P@ssw0rd')
         db.session.add(user)
@@ -157,7 +173,8 @@ class GoGoMediaMediaViewsTestCase(GoGoMediaBaseTestCase):
             'id': 1,
             'name': 'testmedianame',
             'medium': 'other',
-            'consumed_state': 'not started'
+            'consumed_state': 'not started',
+            'description': ''
         })
 
         media = Media.query.filter_by(id=1).first()
@@ -184,7 +201,8 @@ class GoGoMediaMediaViewsTestCase(GoGoMediaBaseTestCase):
             'id': 1,
             'name': 'testmedianame',
             'medium': 'other',
-            'consumed_state': 'started'
+            'consumed_state': 'started',
+            'description': ''
         })
 
         media = Media.query.filter_by(id=1).first()
@@ -211,7 +229,8 @@ class GoGoMediaMediaViewsTestCase(GoGoMediaBaseTestCase):
             'id': 1,
             'name': 'testmedianame',
             'medium': 'other',
-            'consumed_state': 'finished'
+            'consumed_state': 'finished',
+            'description': ''
         })
 
         media = Media.query.filter_by(id=1).first()
@@ -238,7 +257,8 @@ class GoGoMediaMediaViewsTestCase(GoGoMediaBaseTestCase):
             'id': 1,
             'name': 'testmedianame',
             'medium': 'film',
-            'consumed_state': 'not started'
+            'consumed_state': 'not started',
+            'description': ''
         })
 
         media = Media.query.filter_by(id=1).first()
@@ -269,7 +289,8 @@ class GoGoMediaMediaViewsTestCase(GoGoMediaBaseTestCase):
             'id': 1,
             'name': 'testmedianame',
             'medium': 'audio',
-            'consumed_state': 'started'
+            'consumed_state': 'started',
+            'description': ''
         })
 
         media = Media.query.filter_by(id=1).first()
@@ -279,6 +300,29 @@ class GoGoMediaMediaViewsTestCase(GoGoMediaBaseTestCase):
         self.assertEqual(media.user, user.id)
         self.assertEqual(media.medium, 'audio')
         self.assertEqual(media.consumed_state, 'started')
+
+    def test_add_media_with_description(self):
+        user = User('testname', 'P@ssw0rd')
+        db.session.add(user)
+        db.session.commit()
+
+        response = self.client.put('/user/testname/media',
+                                   data=json.dumps({
+                                       'name': 'testmedianame',
+                                       'description': 'some description'
+                                   }),
+                                   content_type='application/json')
+        body = json.loads(response.get_data(as_text=True))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(body['success'])
+        self.assertEqual(body['data'], {
+            'id': 1,
+            'name': 'testmedianame',
+            'medium': 'other',
+            'consumed_state': 'not started',
+            'description': 'some description'
+        })
 
     def test_update_media_consumed_state(self):
         user = User('testname', 'P@ssw0rd')
@@ -300,7 +344,8 @@ class GoGoMediaMediaViewsTestCase(GoGoMediaBaseTestCase):
             'id': 1,
             'name': 'testmedianame',
             'medium': 'other',
-            'consumed_state': 'started'
+            'consumed_state': 'started',
+            'description': ''
         })
 
         media_list = Media.query.filter_by(medianame='testmedianame').all()
@@ -320,7 +365,8 @@ class GoGoMediaMediaViewsTestCase(GoGoMediaBaseTestCase):
             'id': 1,
             'name': 'testmedianame',
             'medium': 'other',
-            'consumed_state': 'finished'
+            'consumed_state': 'finished',
+            'description': ''
         })
 
         media_list = Media.query.filter_by(medianame='testmedianame').all()
@@ -349,7 +395,8 @@ class GoGoMediaMediaViewsTestCase(GoGoMediaBaseTestCase):
             'id': 1,
             'name': 'testmedianame',
             'medium': 'literature',
-            'consumed_state': 'not started'
+            'consumed_state': 'not started',
+            'description': ''
         })
 
         media_list = Media.query.filter_by(medianame='testmedianame').all()
@@ -382,7 +429,8 @@ class GoGoMediaMediaViewsTestCase(GoGoMediaBaseTestCase):
             'id': 1,
             'name': 'testmedianame',
             'medium': 'audio',
-            'consumed_state': 'finished'
+            'consumed_state': 'finished',
+            'description': ''
         })
 
         media_list = Media.query.filter_by(medianame='testmedianame').all()
@@ -391,6 +439,41 @@ class GoGoMediaMediaViewsTestCase(GoGoMediaBaseTestCase):
         self.assertEqual(media_list, [media])
         self.assertEqual(media_list[0].consumed_state, 'finished')
         self.assertEqual(media_list[0].medium, 'audio')
+
+    def test_update_media_description(self):
+        user = User('testname', 'P@ssw0rd')
+        db.session.add(user)
+        db.session.commit()
+
+        media = Media('testmedianame', user.id, description='some description')
+        db.session.add(media)
+        db.session.commit()
+
+        response = self.client.put('/user/testname/media',
+                                   data=json.dumps({
+                                       'id': media.id,
+                                       'description': 'some other description'
+                                   }),
+                                   content_type='application/json')
+        body = json.loads(response.get_data(as_text=True))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(body['success'])
+        self.assertEqual(body['data'], {
+            'id': 1,
+            'name': 'testmedianame',
+            'medium': 'other',
+            'consumed_state': 'not started',
+            'description': 'some other description'
+        })
+
+        media_list = Media.query.filter_by(medianame='testmedianame').all()
+
+        self.assertEqual(len(media_list), 1)
+        self.assertEqual(media_list, [media])
+        self.assertEqual(media_list[0].consumed_state, 'not started')
+        self.assertEqual(media_list[0].medium, 'other')
+        self.assertEqual(media_list[0].description, 'some other description')
 
     def test_update_media_nonexistant_id(self):
         user = User('testname', 'P@ssw0rd')
@@ -443,8 +526,7 @@ class GoGoMediaMediaViewsTestCase(GoGoMediaBaseTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTrue(body['success'])
         self.assertListEqual(sorted(body['data'], key=lambda media: media['name']),
-                             [{'id': media1.id, 'name': 'testmedianame1', 'medium': 'film', 'consumed_state': 'started'},
-                              {'id': media2.id, 'name': 'testmedianame2', 'medium': 'other', 'consumed_state': 'not started'}])
+                             [media1.as_dict(), media2.as_dict()])
 
     def test_get_media_with_specific_consumed_state(self):
         user = User('testname', 'P@ssw0rd')
@@ -469,8 +551,7 @@ class GoGoMediaMediaViewsTestCase(GoGoMediaBaseTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTrue(body['success'])
         self.assertListEqual(sorted(body['data'], key=lambda media: media['name']),
-                             [{'id': media3.id, 'name': 'testmedianame3', 'medium': 'other', 'consumed_state': 'not started'},
-                              {'id': media5.id, 'name': 'testmedianame5', 'medium': 'audio', 'consumed_state': 'not started'}])
+                             [media3.as_dict(), media5.as_dict()])
 
     def test_get_media_with_specific_medium(self):
         user = User('testname', 'P@ssw0rd')
@@ -495,9 +576,7 @@ class GoGoMediaMediaViewsTestCase(GoGoMediaBaseTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTrue(body['success'])
         self.assertEqual(sorted(body['data'], key=lambda media: media['name']),
-                         [{'id': media1.id, 'name': 'testmedianame1', 'medium': 'film', 'consumed_state': 'started'},
-                          {'id': media3.id, 'name': 'testmedianame3', 'medium': 'film', 'consumed_state': 'finished'},
-                          {'id': media4.id, 'name': 'testmedianame4', 'medium': 'film', 'consumed_state': 'not started'}])
+                         [media1.as_dict(), media3.as_dict(), media4.as_dict()])
 
     def test_get_media_with_specific_medium_and_specific_consumed_state(self):
         user = User('testname', 'P@ssw0rd')
@@ -522,8 +601,7 @@ class GoGoMediaMediaViewsTestCase(GoGoMediaBaseTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTrue(body['success'])
         self.assertEqual(sorted(body['data'], key=lambda media: media['name']),
-                         [{'id': media3.id, 'name': 'testmedianame3', 'medium': 'film', 'consumed_state': 'not started'},
-                          {'id': media4.id, 'name': 'testmedianame4', 'medium': 'film', 'consumed_state': 'not started'}])
+                         [media3.as_dict(), media4.as_dict()])
 
     def test_get_media_with_malformed_consumed_state_url_parameter(self):
         user = User('testname', 'P@ssw0rd')
