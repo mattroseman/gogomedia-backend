@@ -15,14 +15,13 @@ Python 3.6
                                                                                                              
 4. create a test database (optional)                                                                         
                                                                                                              
-5. `cp alembic_template.ini alembic.ini`                                                                     
-change the `sqlalchemy.url` to the correct value                                                             
-
-6. `cp config_template.ini config.ini`
+5. `cp config_template.ini config.ini`
 change the `sqlalchemy.url` to the correct value
 change the `sqlalchemy.test.url` to the correct value (optional)                                             
+
+6. `export DATABASE_URL=postgresql://username:password@databaseserver/gogomedia`
                                                                                                              
-6. run `alembic upgrade head` to setup the production database                                               
+7. run `alembic upgrade head` to setup the production database                                               
                                                                                                              
 ## Running                                                                                                   
 run `python app.py` to start the server                                                                      
