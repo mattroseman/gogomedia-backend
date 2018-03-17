@@ -14,13 +14,18 @@ def create_app(test=False):
     # TODO user urandom to generate this
     app.secret_key = 'super secret key'
 
-    if os.environ.get('DATABASE_URL') is None:
-        config = configparser.ConfigParser()
-        config.read('config.ini')
-
-        database_uri = config['database']['sqlalchemy.test.url'] if test else config['database']['sqlalchemy.url']
+    config = configparser.ConfigParser()
+    config.read('config.ini')
+    if test:
+        if os.environ.get('TEST_DATABASE_URL') is None:
+            database_uri = config['database']['sqlalchemy.test.url']
+        else:
+            database_uri = os.environ.get('TEST_DATABASE_URL')
     else:
-        database_uri = os.environ.get('DATABASE_URL')
+        if os.environ.get('DATABASE_URL') is None:
+            database_uri = config['database']['sqlalchemy.url']
+        else:
+            database_uri = os.environ.get('DATABASE_URL')
 
     app.config['SQLALCHEMY_DATABASE_URI'] = database_uri
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
