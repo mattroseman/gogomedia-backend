@@ -23,6 +23,7 @@ def media(logged_in_user, username):
             'consumed_state': a string indicating the current consumed state of this media
                 represents an Enum of possible values ('not started', 'started', 'finished')
             'description': a string indicating some details about this media type (maximum 500 characters)
+            'order': an integer indicating the order this media should be displayed on the frontend
         }
 
     media accepts a GET request and returns all the media associated with the user specified by username
@@ -84,6 +85,10 @@ def media(logged_in_user, username):
         if 'description' in body:
             description = body['description']
 
+        order = None
+        if 'order' in body:
+            order = body['order']
+
         if 'id' in body:
             media = get_media_by_id(body['id'])
             if media is None or media.user != user.id:
@@ -93,12 +98,13 @@ def media(logged_in_user, username):
                     'message': 'logged in user doesn\'t have media with given id'
                 }), 401
 
-            media = update_media(body['id'], medianame, medium, consumed_state, description)
+            media = update_media(body['id'], medianame, medium, consumed_state, description, order)
         else:
             media = add_media(user.id, medianame,
                               medium if medium is not None else 'other',
                               consumed_state if consumed_state is not None else 'not started',
-                              description if description is not None else '')
+                              description if description is not None else '',
+                              order if order is not None else 0)
 
         return jsonify({
             'success': True,
@@ -203,6 +209,14 @@ def validate_put_body_parameters(body):
         return jsonify({
             'success': False,
             'message': 'description parameter must be type string'
+        }), 422
+
+    if 'order' in body and not isinstance(body['order'], int):
+        # TODO validate the range of this number?
+        # return malformed parameters response if 'order' isn't of type int
+        return jsonify({
+            'success': False,
+            'message': 'order parameter must be type integer'
         }), 422
 
 

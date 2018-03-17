@@ -39,7 +39,8 @@ class GoGoMediaMediaViewsTestCase(GoGoMediaBaseTestCase):
             'name': 'testmedianame',
             'medium': 'other',
             'consumed_state': 'not started',
-            'description': ''
+            'description': '',
+            'order': 0
         })
 
         media = Media.query.filter_by(id=1).first()
@@ -157,6 +158,20 @@ class GoGoMediaMediaViewsTestCase(GoGoMediaBaseTestCase):
         self.assertFalse(body['success'])
         self.assertEqual(body['message'], 'description parameter must be type string')
 
+    def test_add_media_mistyped_request_order_param(self):
+        user = User('testname', 'P@ssw0rd')
+        db.session.add(user)
+        db.session.commit()
+
+        response = self.client.put('/user/testname/media',
+                                   data=json.dumps({'name': 'testmedianame', 'order': '23'}),
+                                   content_type='application/json')
+        body = json.loads(response.get_data(as_text=True))
+
+        self.assertEqual(response.status_code, 422)
+        self.assertFalse(body['success'])
+        self.assertEqual(body['message'], 'order parameter must be type integer')
+
     def test_add_media_not_started(self):
         user = User('testname', 'P@ssw0rd')
         db.session.add(user)
@@ -174,7 +189,8 @@ class GoGoMediaMediaViewsTestCase(GoGoMediaBaseTestCase):
             'name': 'testmedianame',
             'medium': 'other',
             'consumed_state': 'not started',
-            'description': ''
+            'description': '',
+            'order': 0
         })
 
         media = Media.query.filter_by(id=1).first()
@@ -202,7 +218,8 @@ class GoGoMediaMediaViewsTestCase(GoGoMediaBaseTestCase):
             'name': 'testmedianame',
             'medium': 'other',
             'consumed_state': 'started',
-            'description': ''
+            'description': '',
+            'order': 0
         })
 
         media = Media.query.filter_by(id=1).first()
@@ -230,7 +247,8 @@ class GoGoMediaMediaViewsTestCase(GoGoMediaBaseTestCase):
             'name': 'testmedianame',
             'medium': 'other',
             'consumed_state': 'finished',
-            'description': ''
+            'description': '',
+            'order': 0
         })
 
         media = Media.query.filter_by(id=1).first()
@@ -258,7 +276,8 @@ class GoGoMediaMediaViewsTestCase(GoGoMediaBaseTestCase):
             'name': 'testmedianame',
             'medium': 'film',
             'consumed_state': 'not started',
-            'description': ''
+            'description': '',
+            'order': 0
         })
 
         media = Media.query.filter_by(id=1).first()
@@ -290,7 +309,8 @@ class GoGoMediaMediaViewsTestCase(GoGoMediaBaseTestCase):
             'name': 'testmedianame',
             'medium': 'audio',
             'consumed_state': 'started',
-            'description': ''
+            'description': '',
+            'order': 0
         })
 
         media = Media.query.filter_by(id=1).first()
@@ -321,7 +341,32 @@ class GoGoMediaMediaViewsTestCase(GoGoMediaBaseTestCase):
             'name': 'testmedianame',
             'medium': 'other',
             'consumed_state': 'not started',
-            'description': 'some description'
+            'description': 'some description',
+            'order': 0
+        })
+
+    def test_add_media_with_order(self):
+        user = User('testname', 'P@ssw0rd')
+        db.session.add(user)
+        db.session.commit()
+
+        response = self.client.put('/user/testname/media',
+                                   data=json.dumps({
+                                       'name': 'testmedianame',
+                                       'order': 654321
+                                   }),
+                                   content_type='application/json')
+        body = json.loads(response.get_data(as_text=True))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(body['success'])
+        self.assertEqual(body['data'], {
+            'id': 1,
+            'name': 'testmedianame',
+            'medium': 'other',
+            'consumed_state': 'not started',
+            'description': '',
+            'order': 654321
         })
 
     def test_update_media_consumed_state(self):
@@ -345,7 +390,8 @@ class GoGoMediaMediaViewsTestCase(GoGoMediaBaseTestCase):
             'name': 'testmedianame',
             'medium': 'other',
             'consumed_state': 'started',
-            'description': ''
+            'description': '',
+            'order': 0
         })
 
         media_list = Media.query.filter_by(medianame='testmedianame').all()
@@ -366,7 +412,8 @@ class GoGoMediaMediaViewsTestCase(GoGoMediaBaseTestCase):
             'name': 'testmedianame',
             'medium': 'other',
             'consumed_state': 'finished',
-            'description': ''
+            'description': '',
+            'order': 0
         })
 
         media_list = Media.query.filter_by(medianame='testmedianame').all()
@@ -396,7 +443,8 @@ class GoGoMediaMediaViewsTestCase(GoGoMediaBaseTestCase):
             'name': 'testmedianame',
             'medium': 'literature',
             'consumed_state': 'not started',
-            'description': ''
+            'description': '',
+            'order': 0
         })
 
         media_list = Media.query.filter_by(medianame='testmedianame').all()
@@ -430,7 +478,8 @@ class GoGoMediaMediaViewsTestCase(GoGoMediaBaseTestCase):
             'name': 'testmedianame',
             'medium': 'audio',
             'consumed_state': 'finished',
-            'description': ''
+            'description': '',
+            'order': 0
         })
 
         media_list = Media.query.filter_by(medianame='testmedianame').all()
@@ -464,7 +513,8 @@ class GoGoMediaMediaViewsTestCase(GoGoMediaBaseTestCase):
             'name': 'testmedianame',
             'medium': 'other',
             'consumed_state': 'not started',
-            'description': 'some other description'
+            'description': 'some other description',
+            'order': 0
         })
 
         media_list = Media.query.filter_by(medianame='testmedianame').all()
@@ -474,6 +524,40 @@ class GoGoMediaMediaViewsTestCase(GoGoMediaBaseTestCase):
         self.assertEqual(media_list[0].consumed_state, 'not started')
         self.assertEqual(media_list[0].medium, 'other')
         self.assertEqual(media_list[0].description, 'some other description')
+
+    def test_update_media_order(self):
+        user = User('testname', 'P@ssw0rd')
+        db.session.add(user)
+        db.session.commit()
+
+        media = Media('testmedianame', user.id, order=9)
+        db.session.add(media)
+        db.session.commit()
+
+        response = self.client.put('/user/testname/media',
+                                   data=json.dumps({
+                                       'id': media.id,
+                                       'order': 88890
+                                   }),
+                                   content_type='application/json')
+        body = json.loads(response.get_data(as_text=True))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(body['success'])
+        self.assertEqual(body['data'], {
+            'id': 1,
+            'name': 'testmedianame',
+            'medium': 'other',
+            'consumed_state': 'not started',
+            'description': '',
+            'order': 88890
+        })
+
+        media_list = Media.query.filter_by(medianame='testmedianame').all()
+
+        self.assertEqual(len(media_list), 1)
+        self.assertEqual(media_list, [media])
+        self.assertEqual(media_list[0].order, 88890)
 
     def test_update_media_nonexistant_id(self):
         user = User('testname', 'P@ssw0rd')
