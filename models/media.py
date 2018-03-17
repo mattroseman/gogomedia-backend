@@ -15,8 +15,9 @@ class Media(db.Model):
     medium = db.Column('medium', medium_type, default='other')
     consumed_state = db.Column('consumed_state', consumed_state_type, default='not started')
     description = db.Column('description', db.String(500))
+    order = db.Column('order', db.Integer, default=0)
 
-    def __init__(self, medianame, userid, medium='other', consumed_state='not started', description=''):
+    def __init__(self, medianame, userid, medium='other', consumed_state='not started', description='', order=0):
         if medium not in mediums:
             raise ValueError('medium must be one of these values: {}'.format(mediums))
         if consumed_state not in consumed_states:
@@ -27,10 +28,11 @@ class Media(db.Model):
         self.medium = medium
         self.consumed_state = consumed_state
         self.description = description
+        self.order = order
 
     def __repr__(self):
-        return '<Media(id={}, medianame={}, user={}, medium={}, consumed_state={})>'.format(
-            self.medianame, self.user, self.medium, self.consumed_state)
+        return '<Media(id={}, medianame={}, user={}, medium={}, consumed_state={}, order={})>'.format(
+            self.medianame, self.user, self.medium, self.consumed_state, self.order)
 
     def as_dict(self):
         """
@@ -41,5 +43,6 @@ class Media(db.Model):
             'name': self.medianame,
             'medium': self.medium,
             'consumed_state': self.consumed_state,
-            'description': self.description
+            'description': self.description,
+            'order': self.order
         }

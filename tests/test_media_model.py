@@ -45,6 +45,7 @@ class GoGoMediaMediaModelTestCase(GoGoMediaBaseTestCase):
         self.assertEqual(media.medium, 'other')
         self.assertEqual(media.consumed_state, 'not started')
         self.assertEqual(media.description, '')
+        self.assertEqual(media.order, 0)
 
     def test_add_not_started_media(self):
         user = User('testname', 'P@ssw0rd')
@@ -60,6 +61,7 @@ class GoGoMediaMediaModelTestCase(GoGoMediaBaseTestCase):
         self.assertEqual(media.user, user.id)
         self.assertEqual(media.medium, 'other')
         self.assertEqual(media.consumed_state, 'not started')
+        self.assertEqual(media.order, 0)
 
     def test_add_started_media(self):
         user = User('testname', 'P@ssw0rd')
@@ -75,6 +77,7 @@ class GoGoMediaMediaModelTestCase(GoGoMediaBaseTestCase):
         self.assertEqual(media.user, user.id)
         self.assertEqual(media.medium, 'other')
         self.assertEqual(media.consumed_state, 'started')
+        self.assertEqual(media.order, 0)
 
     def test_add_finished_media(self):
         user = User('testname', 'P@ssw0rd')
@@ -90,6 +93,7 @@ class GoGoMediaMediaModelTestCase(GoGoMediaBaseTestCase):
         self.assertEqual(media.user, user.id)
         self.assertEqual(media.medium, 'other')
         self.assertEqual(media.consumed_state, 'finished')
+        self.assertEqual(media.order, 0)
 
     def test_add_media_with_medium_type_film(self):
         user = User('testname', 'P@ssw0rd')
@@ -146,6 +150,17 @@ class GoGoMediaMediaModelTestCase(GoGoMediaBaseTestCase):
 
         self.assertEqual(media.description, 'some description')
 
+    def test_add_media_with_specific_order(self):
+        user = User('testname', 'P@ssw0rd')
+        db.session.add(user)
+        db.session.commit()
+
+        media = Media('testmedianame', user.id, order=23)
+        db.session.add(media)
+        db.session.commit()
+
+        self.assertEqual(media.order, 23)
+
     def test_update_media_consumed_state(self):
         user = User('testname', 'P@ssw0rd')
         db.session.add(user)
@@ -194,6 +209,22 @@ class GoGoMediaMediaModelTestCase(GoGoMediaBaseTestCase):
 
         self.assertEqual(media.description, 'some description')
 
+    def test_update_media_order(self):
+        user = User('testname', 'P@ssw0rd')
+        db.session.add(user)
+        db.session.commit()
+
+        media = Media('testmedianame', user.id, order=2)
+        db.session.add(media)
+        db.session.commit()
+
+        self.assertEqual(media.order, 2)
+
+        media.order = 34
+        db.session.commit()
+
+        self.assertEqual(media.order, 34)
+
     def test_remove_media(self):
         user = User('testname', 'P@ssw0rd')
         db.session.add(user)
@@ -219,7 +250,8 @@ class GoGoMediaMediaModelTestCase(GoGoMediaBaseTestCase):
                       user.id,
                       medium='literature',
                       consumed_state='started',
-                      description='some description')
+                      description='some description',
+                      order=5)
         db.session.add(media)
         db.session.commit()
 
@@ -228,5 +260,6 @@ class GoGoMediaMediaModelTestCase(GoGoMediaBaseTestCase):
             'name': 'testmedianame',
             'medium': 'literature',
             'consumed_state': 'started',
-            'description': 'some description'
+            'description': 'some description',
+            'order': 5
         })
