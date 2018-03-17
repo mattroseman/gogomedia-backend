@@ -369,6 +369,71 @@ class GoGoMediaMediaViewsTestCase(GoGoMediaBaseTestCase):
             'order': 654321
         })
 
+    def test_add_multiple_media(self):
+        user = User('testname', 'P@ssw0rd')
+        db.session.add(user)
+        db.session.commit()
+
+        response = self.client.put('/user/testname/media',
+                                   data=json.dumps([
+                                       {'name': 'testmedianame1', 'description': 'hello world'},
+                                       {'name': 'testmedianame2', 'medium': 'audio'},
+                                       {'name': 'testmedianame3', 'order': 3}
+                                   ]),
+                                   content_type='application/json')
+        body = json.loads(response.get_data(as_text=True))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(body['success'])
+        self.assertListEqual(body['data'], [
+            {
+                'id': 1,
+                'name': 'testmedianame1',
+                'medium': 'other',
+                'consumed_state': 'not started',
+                'description': 'hello world',
+                'order': 0
+            },
+            {
+                'id': 2,
+                'name': 'testmedianame2',
+                'medium': 'audio',
+                'consumed_state': 'not started',
+                'description': '',
+                'order': 0
+            },
+            {
+                'id': 3,
+                'name': 'testmedianame3',
+                'medium': 'other',
+                'consumed_state': 'not started',
+                'description': '',
+                'order': 3
+            }
+        ])
+
+    def test_add_multiple_media_with_one_mistyped(self):
+        user = User('testname', 'P@ssw0rd')
+        db.session.add(user)
+        db.session.commit()
+
+        response = self.client.put('/user/testname/media',
+                                   data=json.dumps([
+                                       {'name': 'testmedianame1', 'description': 'something something'},
+                                       {'name': 'testmedianame2', 'medium': 'film'},
+                                       {'name': 'testmedianame3', 'description': 23}
+                                   ]),
+                                   content_type='application/json')
+        body = json.loads(response.get_data(as_text=True))
+
+        self.assertEqual(response.status_code, 422)
+        self.assertFalse(body['success'])
+        self.assertEqual(body['message'], 'description parameter must be type string')
+
+        media_list = Media.query.all()
+
+        self.assertListEqual(media_list, [])
+
     def test_update_media_consumed_state(self):
         user = User('testname', 'P@ssw0rd')
         db.session.add(user)
@@ -592,6 +657,216 @@ class GoGoMediaMediaViewsTestCase(GoGoMediaBaseTestCase):
         self.assertEqual(response.status_code, 401)
         self.assertFalse(body['success'])
         self.assertEqual(body['message'], 'logged in user doesn\'t have media with given id')
+
+    def test_update_multiple_media(self):
+        user = User('testname', 'P@ssw0rd')
+        db.session.add(user)
+        db.session.commit()
+
+        media1 = Media('testmedianame1', user.id)
+        media2 = Media('testmedianame2', user.id)
+        media3 = Media('testmedianame3', user.id)
+        db.session.add(media1)
+        db.session.add(media2)
+        db.session.add(media3)
+        db.session.commit()
+
+        response = self.client.put('/user/testname/media',
+                                   data=json.dumps([
+                                       {'id': 1, 'description': 'hello world'},
+                                       {'id': 2, 'medium': 'audio'},
+                                       {'id': 3, 'order': 3}
+                                   ]),
+                                   content_type='application/json')
+        body = json.loads(response.get_data(as_text=True))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(body['success'])
+        self.assertListEqual(body['data'], [
+            {
+                'id': 1,
+                'name': 'testmedianame1',
+                'medium': 'other',
+                'consumed_state': 'not started',
+                'description': 'hello world',
+                'order': 0
+            },
+            {
+                'id': 2,
+                'name': 'testmedianame2',
+                'medium': 'audio',
+                'consumed_state': 'not started',
+                'description': '',
+                'order': 0
+            },
+            {
+                'id': 3,
+                'name': 'testmedianame3',
+                'medium': 'other',
+                'consumed_state': 'not started',
+                'description': '',
+                'order': 3
+            }
+        ])
+
+        media1_list = Media.query.filter_by(medianame='testmedianame1').all()
+        media2_list = Media.query.filter_by(medianame='testmedianame2').all()
+        media3_list = Media.query.filter_by(medianame='testmedianame3').all()
+
+        self.assertEqual(len(media1_list), 1)
+        self.assertEqual(len(media2_list), 1)
+        self.assertEqual(len(media3_list), 1)
+        self.assertEqual(media1_list[0].description, 'hello world')
+        self.assertEqual(media2_list[0].medium, 'audio')
+        self.assertEqual(media3_list[0].order, 3)
+
+    def test_update_multiple_media_with_one_mistyped(self):
+        user = User('testname', 'P@ssw0rd')
+        db.session.add(user)
+        db.session.commit()
+
+        media1 = Media('testmedianame1', user.id)
+        media2 = Media('testmedianame2', user.id)
+        media3 = Media('testmedianame3', user.id)
+        db.session.add(media1)
+        db.session.add(media2)
+        db.session.add(media3)
+        db.session.commit()
+
+        response = self.client.put('/user/testname/media',
+                                   data=json.dumps([
+                                       {'id': 1, 'description': 'hello world'},
+                                       {'id': 2, 'medium': 3},
+                                       {'id': 3, 'order': 3}
+                                   ]),
+                                   content_type='application/json')
+        body = json.loads(response.get_data(as_text=True))
+
+        self.assertEqual(response.status_code, 422)
+        self.assertFalse(body['success'])
+        self.assertEqual(body['message'],
+                         'medium parameter must be \'film\', \'audio\', \'literature\', or \'other\'')
+
+        media1_list = Media.query.filter_by(medianame='testmedianame1').all()
+        media2_list = Media.query.filter_by(medianame='testmedianame2').all()
+        media3_list = Media.query.filter_by(medianame='testmedianame3').all()
+
+        self.assertEqual(len(media1_list), 1)
+        self.assertEqual(len(media2_list), 1)
+        self.assertEqual(len(media3_list), 1)
+        self.assertEqual(media1_list[0].description, '')
+        self.assertEqual(media2_list[0].medium, 'other')
+        self.assertEqual(media3_list[0].order, 0)
+
+    def test_update_multiple_media_with_one_media_not_owned_by_user(self):
+        user1 = User('testname1', 'P@ssw0rd')
+        user2 = User('testname2', 'pass123')
+        db.session.add(user1)
+        db.session.add(user2)
+        db.session.commit()
+
+        media1 = Media('testmedianame1', user2.id)
+        media2 = Media('testmedianame2', user1.id)
+        media3 = Media('testmedianame3', user2.id)
+        db.session.add(media1)
+        db.session.add(media2)
+        db.session.add(media3)
+        db.session.commit()
+
+        response = self.client.put('/user/testname2/media',
+                                   data=json.dumps([
+                                       {'id': 1, 'order': 2},
+                                       # this media isn't owned by the testname2 user
+                                       {'id': 2, 'description': 'something'},
+                                       {'id': 3}
+                                   ]),
+                                   content_type='application/json')
+        body = json.loads(response.get_data(as_text=True))
+
+        self.assertEqual(response.status_code, 401)
+        self.assertFalse(body['success'])
+        self.assertEqual(body['message'], 'logged in user doesn\'t have media with given id')
+
+        media1_list = Media.query.filter_by(medianame='testmedianame1').all()
+        media2_list = Media.query.filter_by(medianame='testmedianame2').all()
+        media3_list = Media.query.filter_by(medianame='testmedianame3').all()
+
+        self.assertEqual(len(media1_list), 1)
+        self.assertEqual(len(media2_list), 1)
+        self.assertEqual(len(media3_list), 1)
+        self.assertEqual(media1_list[0].order, 0)
+        self.assertEqual(media2_list[0].description, '')
+        self.assertEqual(media2_list[0].user, 1)
+
+    def test_add_and_update_multiple_media(self):
+        user = User('testname', 'P@ssw0rd')
+        db.session.add(user)
+        db.session.commit()
+
+        media1 = Media('testmedianame1', user.id)
+        media2 = Media('testmedianame2', user.id)
+        db.session.add(media1)
+        db.session.add(media2)
+        db.session.commit()
+
+        response = self.client.put('/user/testname/media',
+                                   data=json.dumps([
+                                       {'id': 1, 'order': 2},
+                                       {'name': 'testmedianame3', 'description': 'some description'},
+                                       {'name': 'testmedianame4'},
+                                       {'id': 2, 'medium': 'film'}
+                                   ]),
+                                   content_type='application/json')
+        body = json.loads(response.get_data(as_text=True))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(body['success'])
+        self.assertEqual(body['data'], [
+            {
+                'id': 1,
+                'name': 'testmedianame1',
+                'medium': 'other',
+                'consumed_state': 'not started',
+                'description': '',
+                'order': 2
+            },
+            {
+                'id': 3,
+                'name': 'testmedianame3',
+                'medium': 'other',
+                'consumed_state': 'not started',
+                'description': 'some description',
+                'order': 0
+            },
+            {
+                'id': 4,
+                'name': 'testmedianame4',
+                'medium': 'other',
+                'consumed_state': 'not started',
+                'description': '',
+                'order': 0
+            },
+            {
+                'id': 2,
+                'name': 'testmedianame2',
+                'medium': 'film',
+                'consumed_state': 'not started',
+                'description': '',
+                'order': 0
+            },
+        ])
+
+        media1_list = Media.query.filter_by(medianame='testmedianame1').all()
+        media2_list = Media.query.filter_by(medianame='testmedianame2').all()
+        media3_list = Media.query.filter_by(medianame='testmedianame3').all()
+        media4_list = Media.query.filter_by(medianame='testmedianame4').all()
+
+        self.assertEqual(len(media1_list), 1)
+        self.assertEqual(len(media2_list), 1)
+        self.assertEqual(len(media3_list), 1)
+        self.assertEqual(len(media4_list), 1)
+        self.assertEqual(media1_list[0].order, 2)
+        self.assertEqual(media2_list[0].medium, 'film')
 
     def test_get_media(self):
         user = User('testname', 'P@ssw0rd')
